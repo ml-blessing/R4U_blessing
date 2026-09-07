@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Customer Support Chatbot</title>
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; margin: 0; padding: 20px; }
+        .chat-container { max-width: 600px; margin: 0 auto; background: white; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); overflow: hidden; display: flex; flex-direction: column; height: 80vh; }
+        .header { background: #2563eb; color: white; padding: 15px 20px; text-align: center; font-weight: bold; }
+        .messages { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 15px; }
+        .message { max-width: 80%; padding: 10px 15px; border-radius: 8px; line-height: 1.4; }
+        .user { align-self: flex-end; background: #2563eb; color: white; }
+        .bot { align-self: flex-start; background: #e5e7eb; color: black; }
+        .input-area { display: flex; padding: 15px; background: white; border-top: 1px solid #e5e7eb; }
+        input { flex: 1; padding: 10px; border: 1px solid #d1d5db; border-radius: 6px; outline: none; }
+        button { background: #2563eb; color: white; border: none; padding: 10px 20px; margin-left: 10px; border-radius: 6px; cursor: pointer; }
+        button:hover { background: #1d4ed8; }
+        .loading { font-style: italic; color: #6b7280; font-size: 0.9em; }
+    </style>
+</head>
+<body>
+
+<div class="chat-container">
+    <div class="header">Bank Customer Support</div>
+    <div class="messages" id="messages">
+        <div class="message bot">Hello! I am your AI Support Assistant. How can I help you today?</div>
+    </div>
+    <div class="input-area">
+        <input type="text" id="userInput" placeholder="Ask about your loan, KYC, or RBI rules..." onkeypress="handleEnter(event)">
+        <button onclick="sendMessage()">Send</button>
+    </div>
+</div>
+
+<script>
+    async function sendMessage() {
+        const input = document.getElementById('userInput');
+        const text = input.value.trim();
+        if (!text) return;
+        
+        appendMessage('user', text);
+        input.value = '';
+        
+        const loadingId = appendMessage('bot', 'Typing...', true);
+        
+        try {
+            const res = await fetch('http://localhost:5000/api/customer-chat', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    message: text,
+                    customer_id: 'admin',
+                    session_id: 'browser_session'
+                })
+            });
+            const data = await res.json();
+            document.getElementById(loadingId).remove();
+            appendMessage('bot', data.answer);
+        } catch (e) {
+            document.getElementById(loadingId).remove();
+            appendMessage('bot', 'Sorry, an error occurred while fetching the answer.');
+        }
+    }
+    
+    function appendMessage(sender, text, isLoading=false) {
+        const messages = document.getElementById('messages');
+        const msgDiv = document.createElement('div');
+        msgDiv.className = `message ${sender} ${isLoading ? 'loading' : ''}`;
+        msgDiv.textContent = text;
+        
+        const id = 'msg-' + Date.now();
+        msgDiv.id = id;
+        messages.appendChild(msgDiv);
+        messages.scrollTop = messages.scrollHeight;
+        return id;
+    }
+
+    function handleEnter(e) {
+        if (e.key === 'Enter') sendMessage();
+    }
+</script>
+
+</body>
+</html>

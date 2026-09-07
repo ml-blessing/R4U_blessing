@@ -1,0 +1,72 @@
+﻿kyc_id,application_id,submitted_by,submitted_at,document_type,extracted_name,extracted_dob,extracted_doc_number,extracted_address,extracted_gender,raw_ocr_text,kyc_status,verification_notes,match_score
+KYC-20260906002924-1AFAE9,APP-2026-000001,test_runner,2026-09-06T00:29:24.066819,PAN Card,Rajesh Kumar,1988,ABCDE1234F,,,"INCOME TAX DEPARTMENT
+GOVT OF INDIA
+Name
+RAJESH KUMAR
+Fathers Name /DEEEDEED
+SURESH KUMAR
+Date of Birth /EEEEEEEEEED
+12004'1988
+Permanent AccountNumber
+ABCDE1234F",Verified,KYC verified successfully. ✓ Name matched application record ('Rajesh Kumar'). ✓ Year of birth matched (1988). ~ Address could not be automatically confirmed from document.,0.76
+KYC-20260906002941-57CDA4,APP-2026-000001,test_runner,2026-09-06T00:29:41.812683,PAN Card,Rajesh Kumar,1988,ABCDE1234F,,,"INCOME TAX DEPARTMENT
+GOVT OF INDIA
+Name
+RAJESH KUMAR
+Fathers Name /DEEEDEED
+SURESH KUMAR
+Date of Birth /EEEEEEEEEED
+12004'1988
+Permanent AccountNumber
+ABCDE1234F",Verified,KYC verified successfully. ✓ Name matched application record ('Rajesh Kumar'). ✓ Year of birth matched (1988). ~ Address could not be automatically confirmed from document.,0.76
+KYC-20260906002941-23A405,APP-2026-000001,test_runner,2026-09-06T00:29:41.847032,Aadhaar Card,,,,,,,Unreadable Document,"Could not detect legible text in the uploaded file. Please ensure the document is clear, well-lit, and unblurred.",0.0
+KYC-20260906003831-CF13A6,APP-2026-000001,curl_tester,2026-09-06T00:38:31.479827,Aadhaar Card,Digilocker Data Fetching Otp,,,"mismatch cases), 3.4 Other items collected alongside OVD, 3.5 Company / entity-level KYC documents",,"DigiLocker Fetch, OTP Verification & RBI KYC Documents
+Page 1
+DigiLocker Data Fetching, OTP
+Verification &
+RBI-Mandated KYC Documents
+A focused technical & regulatory reference covering: (1) how documents are fetched
+from DigiLocker, (2) how OTP verification works in that flow, and (3) the documents
+officially required for KYC under RBI rules.
+Prepared for: Akash Gadhave
+Focus areas: DigiLocker fetch API sequence · OTP verification mechanics (DigiLocker sign-in OTP +
+Aadhaar e-KYC OTP) · RBI Officially Valid Documents (OVD)
+Compiled: 2026 · Sources: digitallocker.gov.in, uidai.gov.in, RBI notifications, current KYC/aggregator
+documentation
+
+DigiLocker Fetch, OTP Verification & RBI KYC Documents
+Page 2
+Table of Contents
+1. How Data Is Fetched From DigiLocker
+1.1 Actors involved
+1.2 Full fetch sequence, step by step
+1.3 Fetching Aadhaar specifically (special case)
+1.4 What comes back — data & formats
+2. OTP Verification — How It Actually Works
+2.1 OTP #1 — DigiLocker account sign-in / sign-up
+2.2 OTP #2 — Aadhaar OTP-based e-KYC authentication
+2.3 Side-by-side comparison
+2.4 Security rules RBI/UIDAI attach to OTP verification
+3. Documents Required for KYC — Officially by RBI
+3.1 The six Officially Valid Documents (OVD)
+3.2 Mandatory companion: PAN / Form 60
+3.3 Deemed OVD (address-mismatch cases)
+3.4 Other items collected alongside OVD
+3.5 Company / entity-level KYC documents
+4. Quick-Reference Summary
+5. How to Get a DigiLocker API Key — Step by Step
+6. Sources
+
+DigiLocker Fetch, OTP Verification & RBI KYC Documents
+Page 3
+1. How Data Is Fetched From DigiLocker
+1.1 Actors involved
+•
+DigiLocker (National Digital Locker System) — the government platform holding the user's
+issued/uploaded documents.
+•
+Requester / Partner — your application, registered on the DigiLocker Partner Portal with a Client ID
+and Client Secret (or accessed through a licensed aggregator such as Setu, Surepass, Decentro,
+Cashfree, or Gridlines, which already holds Partner credentials).
+•
+Issuer — ",Mismatch Detected,"Significant discrepancies detected between document and application. ✗ Name mismatch: Document='Digilocker Data Fetching Otp' vs Application='Rajesh Kumar'. ~ DOB not verified: Document='None', App='1988-04-12'. ~ Address could not be automatically confirmed from document.",0.04

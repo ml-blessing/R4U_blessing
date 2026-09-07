@@ -1,0 +1,30 @@
+﻿section,field_key,field_label,field_value,rag_context_chunk
+Metadata,id,Application ID,APP-2026-000006,Application reference identifier is APP-2026-000006.
+Metadata,status,Status,Submitted,Application APP-2026-000006 current processing status is Submitted.
+Metadata,created_date,Creation Date,2026-09-03,Application APP-2026-000006 was submitted on 2026-09-03.
+Metadata,created_by,Created By User,customer_ananya,Application was initiated by user account customer_ananya.
+Applicant,full_name,Full Name,Ananya Roy,Applicant legal name is Ananya Roy.
+Applicant,dob,Date of Birth,1993-07-14,Applicant date of birth is 1993-07-14.
+Applicant,gender,Gender,Female,Applicant gender is Female.
+Applicant,mobile,Mobile Number,9845612345,Applicant verified mobile number is 9845612345.
+Applicant,email,Email Address,ananya.roy@example.com,Applicant contact email address is ananya.roy@example.com.
+Applicant,marital_status,Marital Status,Single,Applicant marital status is Single.
+Address,current_address,Current Residential Address,77 Park Street,Applicant residential address: 77 Park Street.
+Address,city,City,Kolkata,Applicant resides in city Kolkata.
+Address,state,State,West Bengal,Applicant resides in state West Bengal.
+Address,pincode,Pincode,700016,Applicant residence postal pincode is 700016.
+Address,residence_type,Residence Type,Owned,Applicant home ownership/residence type is Owned.
+Employment,employment_type,Employment Type,Salaried,Applicant employment classification is Salaried.
+Employment,employer_name,Employer or Business Name,Wipro,Applicant employer or organization is Wipro.
+Employment,designation,Designation,Consultant,Applicant job title/position is Consultant.
+Employment,experience,Work Experience,5–10 years,Applicant work experience is 5–10 years.
+Employment,monthly_income,Monthly Income (INR),110000,Applicant gross monthly income is INR 110000.
+Loan,loan_type,Loan Type,Vehicle Loan,Applicant requested loan type is Vehicle Loan.
+Loan,requested_amount,Requested Loan Amount (INR),600000,Requested loan principal amount is INR 600000.
+Loan,tenure,Loan Tenure,36 Months,Requested repayment tenure is 36 Months.
+Loan,purpose,Loan Purpose,Vehicle Purchase,Purpose of this loan is Vehicle Purchase.
+Financial,existing_loans,Has Existing Loans,No,Applicant declares existing loan liabilities: No.
+Financial,number_of_loans,Active Loans Count,0,Number of existing loans running is 0.
+Financial,existing_emi,Total Existing Monthly EMI (INR),0,Current monthly EMI commitment is INR 0.
+Financial,monthly_expenses,Estimated Monthly Expenses (INR),30000,Estimated monthly living expenses are INR 30000.
+RAG_Context,summary_profile,Complete Profile for LLM RAG,"Loan Application APP-2026-000006: Applicant Ananya Roy (DOB: 1993-07-14, Gender: Female, Mobile: 9845612345, Email: ananya.roy@example.com, Marital: Single) applied for a Vehicle Loan of INR 600,000.00 with a 36 Months tenure. Loan purpose is 'Vehicle Purchase'. Employment: Salaried at Wipro as Consultant with 5–10 years experience and monthly income of INR 110,000.00. Residential Address: 77 Park Street, Kolkata, West Bengal - 700016 (Owned). Financial liabilities: Existing loans: No, number of loans: 0, current monthly EMI: INR 0.00, monthly expenses: INR 30,000.00. Current status is 'Submitted' recorded on 2026-09-03 by user 'customer_ananya.","Loan Application APP-2026-000006: Applicant Ananya Roy (DOB: 1993-07-14, Gender: Female, Mobile: 9845612345, Email: ananya.roy@example.com, Marital: Single) applied for a Vehicle Loan of INR 600,000.00 with a 36 Months tenure. Loan purpose is 'Vehicle Purchase'. Employment: Salaried at Wipro as Consultant with 5–10 years experience and monthly income of INR 110,000.00. Residential Address: 77 Park Street, Kolkata, West Bengal - 700016 (Owned). Financial liabilities: Existing loans: No, number of loans: 0, current monthly EMI: INR 0.00, monthly expenses: INR 30,000.00. Current status is 'Submitted' recorded on 2026-09-03 by user 'customer_ananya."

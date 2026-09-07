@@ -1,0 +1,30 @@
+﻿section,field_key,field_label,field_value,context_chunk
+Metadata,id,Application ID,APP-2026-000002,Application reference identifier is APP-2026-000002.
+Metadata,status,Status,Draft,Application APP-2026-000002 current processing status is Draft.
+Metadata,created_date,Creation Date,2026-09-02,Application APP-2026-000002 was submitted on 2026-09-02.
+Metadata,created_by,Created By User,customer_priya,Application was initiated by user account customer_priya.
+Applicant,full_name,Full Name,Priya Sharma,Applicant legal name is Priya Sharma.
+Applicant,dob,Date of Birth,1992-09-23,Applicant date of birth is 1992-09-23.
+Applicant,gender,Gender,Female,Applicant gender is Female.
+Applicant,mobile,Mobile Number,9812345678,Applicant verified mobile number is 9812345678.
+Applicant,email,Email Address,priya.sharma@example.com,Applicant contact email address is priya.sharma@example.com.
+Applicant,marital_status,Marital Status,Single,Applicant marital status is Single.
+Address,current_address,Current Residential Address,"Flat 301, Palm Grove, Bandra West","Applicant residential address: Flat 301, Palm Grove, Bandra West."
+Address,city,City,Mumbai,Applicant resides in city Mumbai.
+Address,state,State,Maharashtra,Applicant resides in state Maharashtra.
+Address,pincode,Pincode,400050,Applicant residence postal pincode is 400050.
+Address,residence_type,Residence Type,Rented,Applicant home ownership/residence type is Rented.
+Employment,employment_type,Employment Type,Business Owner,Applicant employment classification is Business Owner.
+Employment,employer_name,Employer or Business Name,Sharma Design Studio,Applicant employer or organization is Sharma Design Studio.
+Employment,designation,Designation,Founder,Applicant job title/position is Founder.
+Employment,experience,Work Experience,3–5 years,Applicant work experience is 3–5 years.
+Employment,monthly_income,Monthly Income (INR),250000,Applicant gross monthly income is INR 250000.
+Loan,loan_type,Loan Type,Home Loan,Applicant requested loan type is Home Loan.
+Loan,requested_amount,Requested Loan Amount (INR),3000000,Requested loan principal amount is INR 3000000.
+Loan,tenure,Loan Tenure,120 Months,Requested repayment tenure is 120 Months.
+Loan,purpose,Loan Purpose,Home Improvement,Purpose of this loan is Home Improvement.
+Financial,existing_loans,Has Existing Loans,Yes,Applicant declares existing loan liabilities: Yes.
+Financial,number_of_loans,Active Loans Count,1,Number of existing loans running is 1.
+Financial,existing_emi,Total Existing Monthly EMI (INR),22000,Current monthly EMI commitment is INR 22000.
+Financial,monthly_expenses,Estimated Monthly Expenses (INR),60000,Estimated monthly living expenses are INR 60000.
+Summary_Profile,summary_profile,Complete Profile,"Loan Application APP-2026-000002: Applicant Priya Sharma (DOB: 1992-09-23, Gender: Female, Mobile: 9812345678, Email: priya.sharma@example.com, Marital: Single) applied for a Home Loan of INR 3,000,000.00 with a 120 Months tenure. Loan purpose is 'Home Improvement'. Employment: Business Owner at Sharma Design Studio as Founder with 3–5 years experience and monthly income of INR 250,000.00. Residential Address: Flat 301, Palm Grove, Bandra West, Mumbai, Maharashtra - 400050 (Rented). Financial liabilities: Existing loans: Yes, number of loans: 1, current monthly EMI: INR 22,000.00, monthly expenses: INR 60,000.00. Current status is 'Draft' recorded on 2026-09-02 by user 'customer_priya.","Loan Application APP-2026-000002: Applicant Priya Sharma (DOB: 1992-09-23, Gender: Female, Mobile: 9812345678, Email: priya.sharma@example.com, Marital: Single) applied for a Home Loan of INR 3,000,000.00 with a 120 Months tenure. Loan purpose is 'Home Improvement'. Employment: Business Owner at Sharma Design Studio as Founder with 3–5 years experience and monthly income of INR 250,000.00. Residential Address: Flat 301, Palm Grove, Bandra West, Mumbai, Maharashtra - 400050 (Rented). Financial liabilities: Existing loans: Yes, number of loans: 1, current monthly EMI: INR 22,000.00, monthly expenses: INR 60,000.00. Current status is 'Draft' recorded on 2026-09-02 by user 'customer_priya."

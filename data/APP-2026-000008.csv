@@ -1,0 +1,30 @@
+﻿section,field_key,field_label,field_value,context_chunk
+Metadata,id,Application ID,APP-2026-000008,Application reference identifier is APP-2026-000008.
+Metadata,status,Status,Submitted,Application APP-2026-000008 current processing status is Submitted.
+Metadata,created_date,Creation Date,2026-09-04,Application APP-2026-000008 was submitted on 2026-09-04.
+Metadata,created_by,Created By User,customer_pooja,Application was initiated by user account customer_pooja.
+Applicant,full_name,Full Name,Pooja Sharma,Applicant legal name is Pooja Sharma.
+Applicant,dob,Date of Birth,1993-08-14,Applicant date of birth is 1993-08-14.
+Applicant,gender,Gender,Female,Applicant gender is Female.
+Applicant,mobile,Mobile Number,9876543299,Applicant verified mobile number is 9876543299.
+Applicant,email,Email Address,pooja.sharma@example.com,Applicant contact email address is pooja.sharma@example.com.
+Applicant,marital_status,Marital Status,Married,Applicant marital status is Married.
+Address,current_address,Current Residential Address,"Flat 402, Lotus Tower, Baner","Applicant residential address: Flat 402, Lotus Tower, Baner."
+Address,city,City,Pune,Applicant resides in city Pune.
+Address,state,State,Maharashtra,Applicant resides in state Maharashtra.
+Address,pincode,Pincode,411045,Applicant residence postal pincode is 411045.
+Address,residence_type,Residence Type,Rented,Applicant home ownership/residence type is Rented.
+Employment,employment_type,Employment Type,Salaried,Applicant employment classification is Salaried.
+Employment,employer_name,Employer or Business Name,Infosys Technologies,Applicant employer or organization is Infosys Technologies.
+Employment,designation,Designation,Senior Software Engineer,Applicant job title/position is Senior Software Engineer.
+Employment,experience,Work Experience,6,Applicant work experience is 6.
+Employment,monthly_income,Monthly Income (INR),110000,Applicant gross monthly income is INR 110000.
+Loan,loan_type,Loan Type,Home Loan,Applicant requested loan type is Home Loan.
+Loan,requested_amount,Requested Loan Amount (INR),4500000,Requested loan principal amount is INR 4500000.
+Loan,tenure,Loan Tenure,20 Years,Requested repayment tenure is 20 Years.
+Loan,purpose,Loan Purpose,Apartment Purchase,Purpose of this loan is Apartment Purchase.
+Financial,existing_loans,Has Existing Loans,No,Applicant declares existing loan liabilities: No.
+Financial,number_of_loans,Active Loans Count,0,Number of existing loans running is 0.
+Financial,existing_emi,Total Existing Monthly EMI (INR),0,Current monthly EMI commitment is INR 0.
+Financial,monthly_expenses,Estimated Monthly Expenses (INR),30000,Estimated monthly living expenses are INR 30000.
+Summary_Profile,summary_profile,Complete Profile,"Loan Application APP-2026-000008: Applicant Pooja Sharma (DOB: 1993-08-14, Gender: Female, Mobile: 9876543299, Email: pooja.sharma@example.com, Marital: Married) applied for a Home Loan of INR 4,500,000.00 with a 20 Years tenure. Loan purpose is 'Apartment Purchase'. Employment: Salaried at Infosys Technologies as Senior Software Engineer with 6 experience and monthly income of INR 110,000.00. Residential Address: Flat 402, Lotus Tower, Baner, Pune, Maharashtra - 411045 (Rented). Financial liabilities: Existing loans: No, number of loans: 0, current monthly EMI: INR 0.00, monthly expenses: INR 30,000.00. Current status is 'Submitted' recorded on 2026-09-04 by user 'customer_pooja.","Loan Application APP-2026-000008: Applicant Pooja Sharma (DOB: 1993-08-14, Gender: Female, Mobile: 9876543299, Email: pooja.sharma@example.com, Marital: Married) applied for a Home Loan of INR 4,500,000.00 with a 20 Years tenure. Loan purpose is 'Apartment Purchase'. Employment: Salaried at Infosys Technologies as Senior Software Engineer with 6 experience and monthly income of INR 110,000.00. Residential Address: Flat 402, Lotus Tower, Baner, Pune, Maharashtra - 411045 (Rented). Financial liabilities: Existing loans: No, number of loans: 0, current monthly EMI: INR 0.00, monthly expenses: INR 30,000.00. Current status is 'Submitted' recorded on 2026-09-04 by user 'customer_pooja."

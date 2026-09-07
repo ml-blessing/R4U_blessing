@@ -1,0 +1,16 @@
+fastapi
+uvicorn
+pydantic
+google-generativeai
+faiss-cpu
+numpy
+pandas
+fpdf2
+python-dotenv
+langgraph
+langchain
+langchain-google-genai
+langchain-community
+chromadb
+langchain-chroma
+sentence-transformers
