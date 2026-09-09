@@ -1,0 +1,34 @@
+﻿section,field_key,field_label,field_value,context_chunk
+Metadata,id,Application ID,APP-2026-000010,Application reference identifier is APP-2026-000010.
+Metadata,status,Status,Submitted,Application APP-2026-000010 current processing status is Submitted.
+Metadata,created_date,Creation Date,2026-09-08,Application APP-2026-000010 was submitted on 2026-09-08.
+Metadata,created_by,Created By User,customer_rajesh,Application was initiated by user account customer_rajesh.
+Applicant,full_name,Full Name,SHIVAM DHUMAL,Applicant legal name is SHIVAM DHUMAL.
+Applicant,dob,Date of Birth,2003-01-28,Applicant date of birth is 2003-01-28.
+Applicant,gender,Gender,Male,Applicant gender is Male.
+Applicant,mobile,Mobile Number,7822053051,Applicant verified mobile number is 7822053051.
+Applicant,email,Email Address,shivdhumal2003@gmail.com,Applicant contact email address is shivdhumal2003@gmail.com.
+Applicant,marital_status,Marital Status,Single,Applicant marital status is Single.
+Address,current_address,Current Residential Address,"Sai Samarth Dham
+Flat No 605","Applicant residential address: Sai Samarth Dham
+Flat No 605."
+Address,city,City,Shivam Dhumal,Applicant resides in city Shivam Dhumal.
+Address,state,State,Shivam Dhumal,Applicant resides in state Shivam Dhumal.
+Address,pincode,Pincode,411023,Applicant residence postal pincode is 411023.
+Address,residence_type,Residence Type,Rented,Applicant home ownership/residence type is Rented.
+Employment,employment_type,Employment Type,Freelancer,Applicant employment classification is Freelancer.
+Employment,employer_name,Employer or Business Name,,Applicant employer or organization is .
+Employment,designation,Designation,,Applicant job title/position is .
+Employment,experience,Work Experience,,Applicant work experience is .
+Employment,monthly_income,Monthly Income (INR),,Applicant gross monthly income is INR .
+Loan,loan_type,Loan Type,Personal Loan,Applicant requested loan type is Personal Loan.
+Loan,requested_amount,Requested Loan Amount (INR),30000,Requested loan principal amount is INR 30000.
+Loan,tenure,Loan Tenure,24 Months,Requested repayment tenure is 24 Months.
+Loan,purpose,Loan Purpose,Vehicle Purchase,Purpose of this loan is Vehicle Purchase.
+Financial,existing_loans,Has Existing Loans,No,Applicant declares existing loan liabilities: No.
+Financial,number_of_loans,Active Loans Count,0,Number of existing loans running is 0.
+Financial,existing_emi,Total Existing Monthly EMI (INR),0,Current monthly EMI commitment is INR 0.
+Financial,monthly_expenses,Estimated Monthly Expenses (INR),50000,Estimated monthly living expenses are INR 50000.
+Summary_Profile,summary_profile,Complete Profile,"Loan Application APP-2026-000010: Applicant SHIVAM DHUMAL (DOB: 2003-01-28, Gender: Male, Mobile: 7822053051, Email: shivdhumal2003@gmail.com, Marital: Single) applied for a Personal Loan of INR 30,000.00 with a 24 Months tenure. Loan purpose is 'Vehicle Purchase'. Employment: Freelancer at  as  with  experience and monthly income of INR 0.00. Residential Address: Sai Samarth Dham
+Flat No 605, Shivam Dhumal, Shivam Dhumal - 411023 (Rented). Financial liabilities: Existing loans: No, number of loans: 0, current monthly EMI: INR 0.00, monthly expenses: INR 50,000.00. Current status is 'Submitted' recorded on 2026-09-08 by user 'customer_rajesh.","Loan Application APP-2026-000010: Applicant SHIVAM DHUMAL (DOB: 2003-01-28, Gender: Male, Mobile: 7822053051, Email: shivdhumal2003@gmail.com, Marital: Single) applied for a Personal Loan of INR 30,000.00 with a 24 Months tenure. Loan purpose is 'Vehicle Purchase'. Employment: Freelancer at  as  with  experience and monthly income of INR 0.00. Residential Address: Sai Samarth Dham
+Flat No 605, Shivam Dhumal, Shivam Dhumal - 411023 (Rented). Financial liabilities: Existing loans: No, number of loans: 0, current monthly EMI: INR 0.00, monthly expenses: INR 50,000.00. Current status is 'Submitted' recorded on 2026-09-08 by user 'customer_rajesh."

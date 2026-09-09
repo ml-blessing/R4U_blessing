@@ -1,0 +1,30 @@
+﻿section,field_key,field_label,field_value,context_chunk
+Metadata,id,Application ID,APP-2026-000009,Application reference identifier is APP-2026-000009.
+Metadata,status,Status,Submitted,Application APP-2026-000009 current processing status is Submitted.
+Metadata,created_date,Creation Date,2026-09-08,Application APP-2026-000009 was submitted on 2026-09-08.
+Metadata,created_by,Created By User,customer_rajesh,Application was initiated by user account customer_rajesh.
+Applicant,full_name,Full Name,SHIVAM DHUMAL,Applicant legal name is SHIVAM DHUMAL.
+Applicant,dob,Date of Birth,2003-01-28,Applicant date of birth is 2003-01-28.
+Applicant,gender,Gender,Male,Applicant gender is Male.
+Applicant,mobile,Mobile Number,7822053051,Applicant verified mobile number is 7822053051.
+Applicant,email,Email Address,shivdhumal2003@gmail.com,Applicant contact email address is shivdhumal2003@gmail.com.
+Applicant,marital_status,Marital Status,Single,Applicant marital status is Single.
+Address,current_address,Current Residential Address,ghghh,Applicant residential address: ghghh.
+Address,city,City,pune,Applicant resides in city pune.
+Address,state,State,maharashtra,Applicant resides in state maharashtra.
+Address,pincode,Pincode,411022,Applicant residence postal pincode is 411022.
+Address,residence_type,Residence Type,Family Owned,Applicant home ownership/residence type is Family Owned.
+Employment,employment_type,Employment Type,Self Employed,Applicant employment classification is Self Employed.
+Employment,employer_name,Employer or Business Name,,Applicant employer or organization is .
+Employment,designation,Designation,,Applicant job title/position is .
+Employment,experience,Work Experience,,Applicant work experience is .
+Employment,monthly_income,Monthly Income (INR),,Applicant gross monthly income is INR .
+Loan,loan_type,Loan Type,Home Loan,Applicant requested loan type is Home Loan.
+Loan,requested_amount,Requested Loan Amount (INR),70000,Requested loan principal amount is INR 70000.
+Loan,tenure,Loan Tenure,84 Months,Requested repayment tenure is 84 Months.
+Loan,purpose,Loan Purpose,Personal Expenses,Purpose of this loan is Personal Expenses.
+Financial,existing_loans,Has Existing Loans,No,Applicant declares existing loan liabilities: No.
+Financial,number_of_loans,Active Loans Count,0,Number of existing loans running is 0.
+Financial,existing_emi,Total Existing Monthly EMI (INR),0,Current monthly EMI commitment is INR 0.
+Financial,monthly_expenses,Estimated Monthly Expenses (INR),6000,Estimated monthly living expenses are INR 6000.
+Summary_Profile,summary_profile,Complete Profile,"Loan Application APP-2026-000009: Applicant SHIVAM DHUMAL (DOB: 2003-01-28, Gender: Male, Mobile: 7822053051, Email: shivdhumal2003@gmail.com, Marital: Single) applied for a Home Loan of INR 70,000.00 with a 84 Months tenure. Loan purpose is 'Personal Expenses'. Employment: Self Employed at  as  with  experience and monthly income of INR 0.00. Residential Address: ghghh, pune, maharashtra - 411022 (Family Owned). Financial liabilities: Existing loans: No, number of loans: 0, current monthly EMI: INR 0.00, monthly expenses: INR 6,000.00. Current status is 'Submitted' recorded on 2026-09-08 by user 'customer_rajesh.","Loan Application APP-2026-000009: Applicant SHIVAM DHUMAL (DOB: 2003-01-28, Gender: Male, Mobile: 7822053051, Email: shivdhumal2003@gmail.com, Marital: Single) applied for a Home Loan of INR 70,000.00 with a 84 Months tenure. Loan purpose is 'Personal Expenses'. Employment: Self Employed at  as  with  experience and monthly income of INR 0.00. Residential Address: ghghh, pune, maharashtra - 411022 (Family Owned). Financial liabilities: Existing loans: No, number of loans: 0, current monthly EMI: INR 0.00, monthly expenses: INR 6,000.00. Current status is 'Submitted' recorded on 2026-09-08 by user 'customer_rajesh."
