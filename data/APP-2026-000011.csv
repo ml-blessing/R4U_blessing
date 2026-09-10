@@ -1,0 +1,49 @@
+﻿section,field_key,field_label,field_value,context_chunk
+Metadata,id,Application ID,APP-2026-000011,Application reference identifier is APP-2026-000011.
+Metadata,status,Status,Submitted,Application APP-2026-000011 current processing status is Submitted.
+Metadata,created_date,Creation Date,2026-09-09,Application APP-2026-000011 was submitted on 2026-09-09.
+Metadata,created_by,Created By User,customer_rajesh,Application was initiated by user account customer_rajesh.
+Applicant,full_name,Full Name,Shivam Ganesh Dhumal,Applicant legal name is Shivam Ganesh Dhumal.
+Applicant,dob,Date of Birth,2003-01-28,Applicant date of birth is 2003-01-28.
+Applicant,gender,Gender,Male,Applicant gender is Male.
+Applicant,mobile,Mobile Number,7822053051,Applicant verified mobile number is 7822053051.
+Applicant,email,Email Address,shivdhumal2003@gmail.com,Applicant contact email address is shivdhumal2003@gmail.com.
+Applicant,marital_status,Marital Status,Married,Applicant marital status is Married.
+Address,current_address,Current Residential Address,"Sai Samarth Dham
+Flat No 605 Achanak chowk Pune","Applicant residential address: Sai Samarth Dham
+Flat No 605 Achanak chowk Pune."
+Address,city,City,Pune,Applicant resides in city Pune.
+Address,state,State,Maharashtra,Applicant resides in state Maharashtra.
+Address,pincode,Pincode,411023,Applicant residence postal pincode is 411023.
+Address,residence_type,Residence Type,Rented,Applicant home ownership/residence type is Rented.
+Address,sameAsPermanent,Same as Permanent,True,Temporary address is same as permanent: True.
+Address,permanent_address,Permanent Address,,Applicant permanent address: .
+Address,permanent_city,Permanent City,,Applicant permanent city .
+Address,permanent_state,Permanent State,,Applicant permanent state .
+Address,permanent_pincode,Permanent Pincode,,Applicant permanent pincode is .
+Employment,employment_type,Employment Type,Self Employed,Applicant employment classification is Self Employed.
+Employment,employer_name,Employer or Business Name,,Applicant employer or organization is .
+Employment,designation,Designation,,Applicant job title/position is .
+Employment,experience,Work Experience,,Applicant work experience is .
+Employment,monthly_income,Monthly Income (INR),,Applicant gross monthly income is INR .
+Loan,loan_type,Loan Type,Home Loan,Applicant requested loan type is Home Loan.
+Loan,requested_amount,Requested Loan Amount (INR),1500000,Requested loan principal amount is INR 1500000.
+Loan,tenure,Loan Tenure,36 Months,Requested repayment tenure is 36 Months.
+Loan,purpose,Loan Purpose,Home Improvement,Purpose of this loan is Home Improvement.
+Financial,existing_loans,Has Existing Loans,No,Applicant declares existing loan liabilities: No.
+Financial,number_of_loans,Active Loans Count,0,Number of existing loans running is 0.
+Financial,existing_emi,Total Existing Monthly EMI (INR),0,Current monthly EMI commitment is INR 0.
+Financial,monthly_expenses,Estimated Monthly Expenses (INR),50000,Estimated monthly living expenses are INR 50000.
+Document,pan_number,PAN Number,HFQPD8399P,Applicant PAN number is HFQPD8399P.
+Document,aadhaar_number,Aadhaar ID,7982 4707 6524,Applicant Aadhaar number is 7982 4707 6524.
+Document,extracted_name,KYC Extracted Name,SHIVAM GANESH DHUMAL,Extracted name from KYC document is SHIVAM GANESH DHUMAL.
+Document,extracted_dob,KYC Extracted DOB,28/01/2014,Extracted DOB from KYC document is 28/01/2014.
+Document,father_name,Father's Name,GANESH DADAM DHUMAL,Father's name: GANESH DADAM DHUMAL.
+Document,id_proof_type,Primary ID Proof,PAN Card,Primary ID proof document: PAN Card.
+Document,address_proof_type,Address Proof,Aadhaar Card,Address proof document: Aadhaar Card.
+Document,income_proof_type,Income Proof Category,Salary Slip (3 Months),Income proof type: Salary Slip (3 Months).
+Document,bank_statement_type,Bank Statement Category,6 Months Bank Statement,Bank statement category: 6 Months Bank Statement.
+Document,kyc_verified,Video KYC Verified,True,Video KYC verified: True.
+Summary_Profile,summary_profile,Complete Profile,"Loan Application APP-2026-000011: Applicant Shivam Ganesh Dhumal (DOB: 2003-01-28, Gender: Male, Mobile: 7822053051, Email: shivdhumal2003@gmail.com, Marital: Married) applied for a Home Loan of INR 1,500,000.00 with a 36 Months tenure. Loan purpose is 'Home Improvement'. Employment: Self Employed at  as  with  experience and monthly income of INR 0.00. Residential Temporary Address: Sai Samarth Dham
+Flat No 605 Achanak chowk Pune, Pune, Maharashtra - 411023 (Rented). Residential Permanent Address: , ,  - . Financial liabilities: Existing loans: No, number of loans: 0, current monthly EMI: INR 0.00, monthly expenses: INR 50,000.00. Current status is 'Submitted' recorded on 2026-09-09 by user 'customer_rajesh.","Loan Application APP-2026-000011: Applicant Shivam Ganesh Dhumal (DOB: 2003-01-28, Gender: Male, Mobile: 7822053051, Email: shivdhumal2003@gmail.com, Marital: Married) applied for a Home Loan of INR 1,500,000.00 with a 36 Months tenure. Loan purpose is 'Home Improvement'. Employment: Self Employed at  as  with  experience and monthly income of INR 0.00. Residential Temporary Address: Sai Samarth Dham
+Flat No 605 Achanak chowk Pune, Pune, Maharashtra - 411023 (Rented). Residential Permanent Address: , ,  - . Financial liabilities: Existing loans: No, number of loans: 0, current monthly EMI: INR 0.00, monthly expenses: INR 50,000.00. Current status is 'Submitted' recorded on 2026-09-09 by user 'customer_rajesh."

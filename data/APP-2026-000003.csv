@@ -14,6 +14,11 @@ Address,city,City,Ahmedabad,Applicant resides in city Ahmedabad.
 Address,state,State,Gujarat,Applicant resides in state Gujarat.
 Address,pincode,Pincode,380015,Applicant residence postal pincode is 380015.
 Address,residence_type,Residence Type,Owned,Applicant home ownership/residence type is Owned.
+Address,sameAsPermanent,Same as Permanent,True,Temporary address is same as permanent: True.
+Address,permanent_address,Permanent Address,,Applicant permanent address: None.
+Address,permanent_city,Permanent City,,Applicant permanent city None.
+Address,permanent_state,Permanent State,,Applicant permanent state None.
+Address,permanent_pincode,Permanent Pincode,,Applicant permanent pincode is None.
 Employment,employment_type,Employment Type,Salaried,Applicant employment classification is Salaried.
 Employment,employer_name,Employer or Business Name,Cadila Healthcare,Applicant employer or organization is Cadila Healthcare.
 Employment,designation,Designation,General Manager,Applicant job title/position is General Manager.
@@ -27,4 +32,14 @@ Financial,existing_loans,Has Existing Loans,No,Applicant declares existing loan 
 Financial,number_of_loans,Active Loans Count,0,Number of existing loans running is 0.
 Financial,existing_emi,Total Existing Monthly EMI (INR),0,Current monthly EMI commitment is INR 0.
 Financial,monthly_expenses,Estimated Monthly Expenses (INR),45000,Estimated monthly living expenses are INR 45000.
-Summary_Profile,summary_profile,Complete Profile,"Loan Application APP-2026-000003: Applicant Amit Patel (DOB: 1985-11-05, Gender: Male, Mobile: 9923456789, Email: amit.patel@example.com, Marital: Married) applied for a Vehicle Loan of INR 800,000.00 with a 48 Months tenure. Loan purpose is 'Vehicle Purchase'. Employment: Salaried at Cadila Healthcare as General Manager with More than 10 years experience and monthly income of INR 180,000.00. Residential Address: 15 Nehru Nagar, Ahmedabad, Gujarat - 380015 (Owned). Financial liabilities: Existing loans: No, number of loans: 0, current monthly EMI: INR 0.00, monthly expenses: INR 45,000.00. Current status is 'Submitted' recorded on 2026-09-03 by user 'bank_officer.","Loan Application APP-2026-000003: Applicant Amit Patel (DOB: 1985-11-05, Gender: Male, Mobile: 9923456789, Email: amit.patel@example.com, Marital: Married) applied for a Vehicle Loan of INR 800,000.00 with a 48 Months tenure. Loan purpose is 'Vehicle Purchase'. Employment: Salaried at Cadila Healthcare as General Manager with More than 10 years experience and monthly income of INR 180,000.00. Residential Address: 15 Nehru Nagar, Ahmedabad, Gujarat - 380015 (Owned). Financial liabilities: Existing loans: No, number of loans: 0, current monthly EMI: INR 0.00, monthly expenses: INR 45,000.00. Current status is 'Submitted' recorded on 2026-09-03 by user 'bank_officer."
+Document,pan_number,PAN Number,,Applicant PAN number is None.
+Document,aadhaar_number,Aadhaar ID,,Applicant Aadhaar number is None.
+Document,extracted_name,KYC Extracted Name,,Extracted name from KYC document is None.
+Document,extracted_dob,KYC Extracted DOB,,Extracted DOB from KYC document is None.
+Document,father_name,Father's Name,,Father's name: None.
+Document,id_proof_type,Primary ID Proof,PAN Card,Primary ID proof document: PAN Card.
+Document,address_proof_type,Address Proof,Aadhaar Card,Address proof document: Aadhaar Card.
+Document,income_proof_type,Income Proof Category,,Income proof type: None.
+Document,bank_statement_type,Bank Statement Category,,Bank statement category: None.
+Document,kyc_verified,Video KYC Verified,False,Video KYC verified: False.
+Summary_Profile,summary_profile,Complete Profile,"Loan Application APP-2026-000003: Applicant Amit Patel (DOB: 1985-11-05, Gender: Male, Mobile: 9923456789, Email: amit.patel@example.com, Marital: Married) applied for a Vehicle Loan of INR 800,000.00 with a 48 Months tenure. Loan purpose is 'Vehicle Purchase'. Employment: Salaried at Cadila Healthcare as General Manager with More than 10 years experience and monthly income of INR 180,000.00. Residential Temporary Address: 15 Nehru Nagar, Ahmedabad, Gujarat - 380015 (Owned). Residential Permanent Address: Same as Temporary, ,  - . Financial liabilities: Existing loans: No, number of loans: 0, current monthly EMI: INR 0.00, monthly expenses: INR 45,000.00. Current status is 'Submitted' recorded on 2026-09-03 by user 'bank_officer.","Loan Application APP-2026-000003: Applicant Amit Patel (DOB: 1985-11-05, Gender: Male, Mobile: 9923456789, Email: amit.patel@example.com, Marital: Married) applied for a Vehicle Loan of INR 800,000.00 with a 48 Months tenure. Loan purpose is 'Vehicle Purchase'. Employment: Salaried at Cadila Healthcare as General Manager with More than 10 years experience and monthly income of INR 180,000.00. Residential Temporary Address: 15 Nehru Nagar, Ahmedabad, Gujarat - 380015 (Owned). Residential Permanent Address: Same as Temporary, ,  - . Financial liabilities: Existing loans: No, number of loans: 0, current monthly EMI: INR 0.00, monthly expenses: INR 45,000.00. Current status is 'Submitted' recorded on 2026-09-03 by user 'bank_officer."

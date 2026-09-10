@@ -16,3 +16,4 @@ langchain-chroma
 sentence-transformers
 easyocr
 python-multipart
+openai

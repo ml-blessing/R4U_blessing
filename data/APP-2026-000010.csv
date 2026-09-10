@@ -16,6 +16,11 @@ Address,city,City,Shivam Dhumal,Applicant resides in city Shivam Dhumal.
 Address,state,State,Shivam Dhumal,Applicant resides in state Shivam Dhumal.
 Address,pincode,Pincode,411023,Applicant residence postal pincode is 411023.
 Address,residence_type,Residence Type,Rented,Applicant home ownership/residence type is Rented.
+Address,sameAsPermanent,Same as Permanent,True,Temporary address is same as permanent: True.
+Address,permanent_address,Permanent Address,,Applicant permanent address: None.
+Address,permanent_city,Permanent City,,Applicant permanent city None.
+Address,permanent_state,Permanent State,,Applicant permanent state None.
+Address,permanent_pincode,Permanent Pincode,,Applicant permanent pincode is None.
 Employment,employment_type,Employment Type,Freelancer,Applicant employment classification is Freelancer.
 Employment,employer_name,Employer or Business Name,,Applicant employer or organization is .
 Employment,designation,Designation,,Applicant job title/position is .
@@ -29,6 +34,16 @@ Financial,existing_loans,Has Existing Loans,No,Applicant declares existing loan 
 Financial,number_of_loans,Active Loans Count,0,Number of existing loans running is 0.
 Financial,existing_emi,Total Existing Monthly EMI (INR),0,Current monthly EMI commitment is INR 0.
 Financial,monthly_expenses,Estimated Monthly Expenses (INR),50000,Estimated monthly living expenses are INR 50000.
-Summary_Profile,summary_profile,Complete Profile,"Loan Application APP-2026-000010: Applicant SHIVAM DHUMAL (DOB: 2003-01-28, Gender: Male, Mobile: 7822053051, Email: shivdhumal2003@gmail.com, Marital: Single) applied for a Personal Loan of INR 30,000.00 with a 24 Months tenure. Loan purpose is 'Vehicle Purchase'. Employment: Freelancer at  as  with  experience and monthly income of INR 0.00. Residential Address: Sai Samarth Dham
-Flat No 605, Shivam Dhumal, Shivam Dhumal - 411023 (Rented). Financial liabilities: Existing loans: No, number of loans: 0, current monthly EMI: INR 0.00, monthly expenses: INR 50,000.00. Current status is 'Submitted' recorded on 2026-09-08 by user 'customer_rajesh.","Loan Application APP-2026-000010: Applicant SHIVAM DHUMAL (DOB: 2003-01-28, Gender: Male, Mobile: 7822053051, Email: shivdhumal2003@gmail.com, Marital: Single) applied for a Personal Loan of INR 30,000.00 with a 24 Months tenure. Loan purpose is 'Vehicle Purchase'. Employment: Freelancer at  as  with  experience and monthly income of INR 0.00. Residential Address: Sai Samarth Dham
-Flat No 605, Shivam Dhumal, Shivam Dhumal - 411023 (Rented). Financial liabilities: Existing loans: No, number of loans: 0, current monthly EMI: INR 0.00, monthly expenses: INR 50,000.00. Current status is 'Submitted' recorded on 2026-09-08 by user 'customer_rajesh."
+Document,pan_number,PAN Number,HFQPD8399P,Applicant PAN number is HFQPD8399P.
+Document,aadhaar_number,Aadhaar ID,798247076524,Applicant Aadhaar number is 798247076524.
+Document,extracted_name,KYC Extracted Name,,Extracted name from KYC document is None.
+Document,extracted_dob,KYC Extracted DOB,,Extracted DOB from KYC document is None.
+Document,father_name,Father's Name,,Father's name: None.
+Document,id_proof_type,Primary ID Proof,PAN Card,Primary ID proof document: PAN Card.
+Document,address_proof_type,Address Proof,Aadhaar Card,Address proof document: Aadhaar Card.
+Document,income_proof_type,Income Proof Category,Salary Slip (3 Months),Income proof type: Salary Slip (3 Months).
+Document,bank_statement_type,Bank Statement Category,6 Months Bank Statement,Bank statement category: 6 Months Bank Statement.
+Document,kyc_verified,Video KYC Verified,False,Video KYC verified: False.
+Summary_Profile,summary_profile,Complete Profile,"Loan Application APP-2026-000010: Applicant SHIVAM DHUMAL (DOB: 2003-01-28, Gender: Male, Mobile: 7822053051, Email: shivdhumal2003@gmail.com, Marital: Single) applied for a Personal Loan of INR 30,000.00 with a 24 Months tenure. Loan purpose is 'Vehicle Purchase'. Employment: Freelancer at  as  with  experience and monthly income of INR 0.00. Residential Temporary Address: Sai Samarth Dham
+Flat No 605, Shivam Dhumal, Shivam Dhumal - 411023 (Rented). Residential Permanent Address: Same as Temporary, ,  - . Financial liabilities: Existing loans: No, number of loans: 0, current monthly EMI: INR 0.00, monthly expenses: INR 50,000.00. Current status is 'Submitted' recorded on 2026-09-08 by user 'customer_rajesh.","Loan Application APP-2026-000010: Applicant SHIVAM DHUMAL (DOB: 2003-01-28, Gender: Male, Mobile: 7822053051, Email: shivdhumal2003@gmail.com, Marital: Single) applied for a Personal Loan of INR 30,000.00 with a 24 Months tenure. Loan purpose is 'Vehicle Purchase'. Employment: Freelancer at  as  with  experience and monthly income of INR 0.00. Residential Temporary Address: Sai Samarth Dham
+Flat No 605, Shivam Dhumal, Shivam Dhumal - 411023 (Rented). Residential Permanent Address: Same as Temporary, ,  - . Financial liabilities: Existing loans: No, number of loans: 0, current monthly EMI: INR 0.00, monthly expenses: INR 50,000.00. Current status is 'Submitted' recorded on 2026-09-08 by user 'customer_rajesh."

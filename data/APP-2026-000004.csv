@@ -14,6 +14,11 @@ Address,city,City,Noida,Applicant resides in city Noida.
 Address,state,State,Uttar Pradesh,Applicant resides in state Uttar Pradesh.
 Address,pincode,Pincode,201309,Applicant residence postal pincode is 201309.
 Address,residence_type,Residence Type,Family Owned,Applicant home ownership/residence type is Family Owned.
+Address,sameAsPermanent,Same as Permanent,True,Temporary address is same as permanent: True.
+Address,permanent_address,Permanent Address,,Applicant permanent address: None.
+Address,permanent_city,Permanent City,,Applicant permanent city None.
+Address,permanent_state,Permanent State,,Applicant permanent state None.
+Address,permanent_pincode,Permanent Pincode,,Applicant permanent pincode is None.
 Employment,employment_type,Employment Type,Salaried,Applicant employment classification is Salaried.
 Employment,employer_name,Employer or Business Name,Tech Mahindra,Applicant employer or organization is Tech Mahindra.
 Employment,designation,Designation,Software Engineer,Applicant job title/position is Software Engineer.
@@ -27,4 +32,14 @@ Financial,existing_loans,Has Existing Loans,No,Applicant declares existing loan 
 Financial,number_of_loans,Active Loans Count,0,Number of existing loans running is 0.
 Financial,existing_emi,Total Existing Monthly EMI (INR),0,Current monthly EMI commitment is INR 0.
 Financial,monthly_expenses,Estimated Monthly Expenses (INR),25000,Estimated monthly living expenses are INR 25000.
-Summary_Profile,summary_profile,Complete Profile,"Loan Application APP-2026-000004: Applicant Neha Singh (DOB: 1995-02-18, Gender: Female, Mobile: 9734567890, Email: neha.singh@example.com, Marital: Single) applied for a Education Loan of INR 1,500,000.00 with a 60 Months tenure. Loan purpose is 'Education'. Employment: Salaried at Tech Mahindra as Software Engineer with 1–3 years experience and monthly income of INR 85,000.00. Residential Address: Sector 62, Green Valley Apts, Noida, Uttar Pradesh - 201309 (Family Owned). Financial liabilities: Existing loans: No, number of loans: 0, current monthly EMI: INR 0.00, monthly expenses: INR 25,000.00. Current status is 'Submitted' recorded on 2026-09-04 by user 'customer_rajesh.","Loan Application APP-2026-000004: Applicant Neha Singh (DOB: 1995-02-18, Gender: Female, Mobile: 9734567890, Email: neha.singh@example.com, Marital: Single) applied for a Education Loan of INR 1,500,000.00 with a 60 Months tenure. Loan purpose is 'Education'. Employment: Salaried at Tech Mahindra as Software Engineer with 1–3 years experience and monthly income of INR 85,000.00. Residential Address: Sector 62, Green Valley Apts, Noida, Uttar Pradesh - 201309 (Family Owned). Financial liabilities: Existing loans: No, number of loans: 0, current monthly EMI: INR 0.00, monthly expenses: INR 25,000.00. Current status is 'Submitted' recorded on 2026-09-04 by user 'customer_rajesh."
+Document,pan_number,PAN Number,,Applicant PAN number is None.
+Document,aadhaar_number,Aadhaar ID,,Applicant Aadhaar number is None.
+Document,extracted_name,KYC Extracted Name,,Extracted name from KYC document is None.
+Document,extracted_dob,KYC Extracted DOB,,Extracted DOB from KYC document is None.
+Document,father_name,Father's Name,,Father's name: None.
+Document,id_proof_type,Primary ID Proof,PAN Card,Primary ID proof document: PAN Card.
+Document,address_proof_type,Address Proof,Aadhaar Card,Address proof document: Aadhaar Card.
+Document,income_proof_type,Income Proof Category,,Income proof type: None.
+Document,bank_statement_type,Bank Statement Category,,Bank statement category: None.
+Document,kyc_verified,Video KYC Verified,False,Video KYC verified: False.
+Summary_Profile,summary_profile,Complete Profile,"Loan Application APP-2026-000004: Applicant Neha Singh (DOB: 1995-02-18, Gender: Female, Mobile: 9734567890, Email: neha.singh@example.com, Marital: Single) applied for a Education Loan of INR 1,500,000.00 with a 60 Months tenure. Loan purpose is 'Education'. Employment: Salaried at Tech Mahindra as Software Engineer with 1–3 years experience and monthly income of INR 85,000.00. Residential Temporary Address: Sector 62, Green Valley Apts, Noida, Uttar Pradesh - 201309 (Family Owned). Residential Permanent Address: Same as Temporary, ,  - . Financial liabilities: Existing loans: No, number of loans: 0, current monthly EMI: INR 0.00, monthly expenses: INR 25,000.00. Current status is 'Submitted' recorded on 2026-09-04 by user 'customer_rajesh.","Loan Application APP-2026-000004: Applicant Neha Singh (DOB: 1995-02-18, Gender: Female, Mobile: 9734567890, Email: neha.singh@example.com, Marital: Single) applied for a Education Loan of INR 1,500,000.00 with a 60 Months tenure. Loan purpose is 'Education'. Employment: Salaried at Tech Mahindra as Software Engineer with 1–3 years experience and monthly income of INR 85,000.00. Residential Temporary Address: Sector 62, Green Valley Apts, Noida, Uttar Pradesh - 201309 (Family Owned). Residential Permanent Address: Same as Temporary, ,  - . Financial liabilities: Existing loans: No, number of loans: 0, current monthly EMI: INR 0.00, monthly expenses: INR 25,000.00. Current status is 'Submitted' recorded on 2026-09-04 by user 'customer_rajesh."

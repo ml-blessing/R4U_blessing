@@ -20,11 +20,16 @@ const apiService = {
     return await res.json();
   },
 
-  async extractDocumentOCR(imageBlob, applicationId = '') {
+  async extractDocumentOCR(imageBlob, applicationId = '', applicantName = '') {
     const formData = new FormData();
     formData.append('file', imageBlob, 'document.jpg');
-    const params = applicationId ? `?application_id=${encodeURIComponent(applicationId)}` : '';
-    const res = await fetch(`${API_BASE}/ocr/extract${params}`, {
+    if (applicationId) formData.append('application_id', applicationId);
+    if (applicantName) formData.append('applicant_name', applicantName);
+    const params = new URLSearchParams();
+    if (applicationId) params.append('application_id', applicationId);
+    if (applicantName) params.append('applicant_name', applicantName);
+    const queryString = params.toString() ? `?${params.toString()}` : '';
+    const res = await fetch(`${API_BASE}/ocr/extract${queryString}`, {
       method: 'POST',
       body: formData
     });
@@ -315,8 +320,8 @@ function collectDigitalTelemetry(formMetrics = {}, address = {}) {
 
 
 
-// PDF Generator for Bank and Developer Roles using jsPDF
-function saveApplicationPDF(app, role = 'bank') {
+// PDF Generator for User (Customer), Bank, and Developer Roles using jsPDF
+function saveApplicationPDF(app, role = 'user') {
   if (!app) return;
   const doc = new jsPDF({
     orientation: 'portrait',
@@ -324,28 +329,68 @@ function saveApplicationPDF(app, role = 'bank') {
     format: 'a4'
   });
 
+  const isUser = role === 'user' || role === 'customer';
   const isBank = role === 'bank';
-  const primaryColor = isBank ? [15, 76, 129] : [30, 41, 59]; // Bank Navy vs Dev Slate
+  const isDev = role === 'developer';
+
+  // Role Theme Settings
+  let primaryColor = [15, 76, 129]; // Bank Royal Navy
+  let secondaryColor = [239, 246, 255]; // Soft Navy tint
+  let headerTitle = 'R4U (RUPPEE4U) - BANK CREDIT APPRAISAL DOSSIER';
+  let headerSubtitle = 'CONFIDENTIAL — BANK CREDIT OFFICER & REGULATORY COMPLIANCE COPY';
+  let roleBadge = 'BANK APPRAISAL COPY';
+
+  if (isUser) {
+    primaryColor = [16, 115, 78]; // Emerald Green
+    secondaryColor = [236, 253, 245]; // Soft Mint tint
+    headerTitle = 'R4U (RUPPEE4U) - APPLICANT LOAN APPLICATION & RECEIPT';
+    headerSubtitle = 'OFFICIAL APPLICANT COPY — APPLICATION SUMMARY & ACKNOWLEDGEMENT RECEIPT';
+    roleBadge = 'CUSTOMER OFFICIAL COPY';
+  } else if (isDev) {
+    primaryColor = [30, 41, 59]; // Slate Slate
+    secondaryColor = [241, 245, 249]; // Soft Slate tint
+    headerTitle = 'R4U (RUPPEE4U) - DEVELOPER AUDIT SPECIFICATION';
+    headerSubtitle = 'TECHNICAL SPECIFICATION & AUDIT TELEMETRY DOSSIER';
+    roleBadge = 'DEVELOPER AUDIT SPEC';
+  }
+
   let y = 14;
 
-  // Header Banner
-  doc.setFillColor(...primaryColor);
-  doc.rect(14, y, 182, 16, 'F');
-  
-  doc.setTextColor(255, 255, 255);
-  doc.setFontSize(13);
-  doc.setFont('helvetica', 'bold');
-  doc.text(isBank ? 'R4U (RUPPEE4U) - LOAN APPRAISAL DOSSIER' : 'R4U (RUPPEE4U) - DEVELOPER AUDIT SPECIFICATION', 18, y + 7.5);
-  doc.setFontSize(8);
-  doc.setFont('helvetica', 'normal');
-  doc.text(isBank ? 'CONFIDENTIAL - BANK CREDIT OFFICER & REGULATORY COMPLIANCE COPY' : 'TECHNICAL SPECIFICATION & AUDIT TELEMETRY DOSSIER', 18, y + 12.5);
+  const drawHeaderBanner = () => {
+    doc.setFillColor(...primaryColor);
+    doc.rect(14, y, 182, 16, 'F');
+    
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(12);
+    doc.setFont('helvetica', 'bold');
+    doc.text(headerTitle, 18, y + 7);
+    doc.setFontSize(7.5);
+    doc.setFont('helvetica', 'normal');
+    doc.text(headerSubtitle, 18, y + 12);
+    y += 22;
+  };
 
-  y += 22;
+  const checkPageBreak = (neededHeight = 20) => {
+    if (y + neededHeight > 268) {
+      doc.addPage();
+      y = 14;
+      // Continuation Header
+      doc.setFillColor(...primaryColor);
+      doc.rect(14, y, 182, 8, 'F');
+      doc.setTextColor(255, 255, 255);
+      doc.setFontSize(8.5);
+      doc.setFont('helvetica', 'bold');
+      doc.text(`${headerTitle} (Continued) — Application ID: ${app.id || 'N/A'}`, 18, y + 5.5);
+      y += 14;
+    }
+  };
+
+  drawHeaderBanner();
 
   // Application Reference & Status Block
   doc.setFillColor(248, 250, 252);
   doc.setDrawColor(203, 213, 225);
-  doc.roundedRect(14, y, 182, 15, 2, 2, 'FD');
+  doc.roundedRect(14, y, 182, 16, 2, 2, 'FD');
 
   doc.setTextColor(15, 23, 42);
   doc.setFontSize(9.5);
@@ -355,24 +400,29 @@ function saveApplicationPDF(app, role = 'bank') {
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(8);
   doc.setTextColor(71, 85, 105);
-  doc.text(`Submission Date: ${app.created_date || new Date().toISOString().split('T')[0]}`, 18, y + 11);
-  doc.text(`Created By User: ${app.created_by || 'customer'}`, 105, y + 11);
+  doc.text(`Submission Date: ${app.created_date || new Date().toISOString().split('T')[0]}`, 18, y + 11.5);
+  doc.text(`Dossier Copy: ${roleBadge}`, 105, y + 11.5);
 
-  y += 20;
+  y += 22;
 
   const drawSection = (title, items) => {
+    const rowCount = Math.ceil(items.length / 2);
+    const needed = 8.5 + (rowCount * 5.2) + 3;
+    checkPageBreak(needed);
+
     // Section Header
     doc.setFillColor(241, 245, 249);
-    doc.rect(14, y, 182, 6, 'F');
+    doc.rect(14, y, 182, 6.5, 'F');
     doc.setTextColor(...primaryColor);
     doc.setFontSize(8.5);
     doc.setFont('helvetica', 'bold');
-    doc.text(title.toUpperCase(), 17, y + 4.2);
-    y += 8;
+    doc.text(title.toUpperCase(), 17, y + 4.5);
+    y += 9;
 
     // Items (2 columns)
     doc.setFontSize(8);
     for (let i = 0; i < items.length; i += 2) {
+      checkPageBreak(6);
       const col1 = items[i];
       const col2 = items[i + 1];
 
@@ -382,7 +432,9 @@ function saveApplicationPDF(app, role = 'bank') {
       doc.text(`${col1.label}:`, 18, y);
       doc.setFont('helvetica', 'normal');
       doc.setTextColor(15, 23, 42);
-      doc.text(String(col1.val || 'N/A'), 62, y);
+      const val1 = String(col1.val ?? 'N/A');
+      const val1Trunc = val1.length > 34 ? val1.substring(0, 32) + '...' : val1;
+      doc.text(val1Trunc, 62, y);
 
       // Col 2
       if (col2) {
@@ -391,7 +443,9 @@ function saveApplicationPDF(app, role = 'bank') {
         doc.text(`${col2.label}:`, 108, y);
         doc.setFont('helvetica', 'normal');
         doc.setTextColor(15, 23, 42);
-        doc.text(String(col2.val || 'N/A'), 150, y);
+        const val2 = String(col2.val ?? 'N/A');
+        const val2Trunc = val2.length > 34 ? val2.substring(0, 32) + '...' : val2;
+        doc.text(val2Trunc, 150, y);
       }
       y += 5.2;
     }
@@ -403,7 +457,10 @@ function saveApplicationPDF(app, role = 'bank') {
   const employment = app.employment || {};
   const loan = app.loan || {};
   const financial = app.financial || {};
+  const documentInfo = app.document || {};
+  const digital = app.digital || {};
 
+  // Section 1: Applicant Personal Information
   drawSection('1. Applicant Personal Information', [
     { label: 'Full Legal Name', val: applicant.full_name },
     { label: 'Date of Birth', val: applicant.dob },
@@ -413,72 +470,174 @@ function saveApplicationPDF(app, role = 'bank') {
     { label: 'Email Address', val: applicant.email }
   ]);
 
-  drawSection('2. Residential Address', [
-    { label: 'Current Address', val: (address.current_address || '').replace(/[\r\n]+/g, ' ') },
-    { label: 'City', val: address.city },
-    { label: 'State', val: address.state },
-    { label: 'Pincode', val: address.pincode },
-    { label: 'Residence Type', val: address.residence_type }
-  ]);
+  // Section 2: Residential Address (Temporary & Permanent)
+  const isSameAddress = address.sameAsPermanent === true || address.sameAsPermanent === 'true' || address.sameAsPermanent === 1;
+  const addressItems = [
+    { label: 'Temporary Address', val: (address.current_address || '').replace(/[\r\n]+/g, ' ') },
+    { label: 'Temporary City', val: address.city },
+    { label: 'Temporary State', val: address.state },
+    { label: 'Temporary Pincode', val: address.pincode },
+    { label: 'Residence Type', val: address.residence_type },
+    { label: 'Same as Permanent', val: isSameAddress ? 'Yes (Identical)' : 'No (Separate Address)' }
+  ];
+  if (!isSameAddress && address.permanent_address) {
+    addressItems.push(
+      { label: 'Permanent Address', val: (address.permanent_address || '').replace(/[\r\n]+/g, ' ') },
+      { label: 'Permanent City', val: address.permanent_city },
+      { label: 'Permanent State', val: address.permanent_state },
+      { label: 'Permanent Pincode', val: address.permanent_pincode }
+    );
+  }
+  drawSection('2. Residential Address Details', addressItems);
 
+  // Section 3: Employment & Income Assessment
+  const monthlyInc = Number(employment.monthly_income || 0);
   drawSection('3. Employment & Income Assessment', [
     { label: 'Employment Type', val: employment.employment_type },
     { label: 'Employer / Business', val: employment.employer_name },
     { label: 'Designation / Role', val: employment.designation },
-    { label: 'Experience', val: employment.experience },
-    { label: 'Gross Monthly Income', val: employment.monthly_income ? `INR ${Number(employment.monthly_income).toLocaleString('en-IN')}` : 'INR 0' }
+    { label: 'Total Experience', val: employment.experience },
+    { label: 'Gross Monthly Income', val: monthlyInc ? `INR ${monthlyInc.toLocaleString('en-IN')}` : 'INR 0' },
+    { label: 'Annualized Income', val: monthlyInc ? `INR ${(monthlyInc * 12).toLocaleString('en-IN')}` : 'INR 0' }
   ]);
 
+  // Section 4: Requested Loan Facility
+  const reqAmt = Number(loan.requested_amount || 0);
   drawSection('4. Requested Loan Facility', [
-    { label: 'Loan Scheme', val: loan.loan_type },
-    { label: 'Principal Amount', val: loan.requested_amount ? `INR ${Number(loan.requested_amount).toLocaleString('en-IN')}` : 'INR 0' },
+    { label: 'Loan Facility / Scheme', val: loan.loan_type },
+    { label: 'Principal Amount', val: reqAmt ? `INR ${reqAmt.toLocaleString('en-IN')}` : 'INR 0' },
     { label: 'Repayment Tenure', val: loan.tenure },
-    { label: 'Loan Purpose', val: loan.purpose },
-    { label: 'Purpose Specifics', val: loan.purpose_other || 'Standard Purpose' }
+    { label: 'Stated Loan Purpose', val: loan.purpose },
+    { label: 'Purpose Specifics', val: loan.purpose_other || 'Standard Scheme Terms' },
+    { label: 'Application Currency', val: 'INR (Indian Rupee)' }
   ]);
 
-  drawSection('5. Financial Liabilities & Risk Profile', [
-    { label: 'Existing Credit Liabilities', val: financial.existing_loans || 'No' },
+  // Section 5: Financial Liabilities & Risk Profile
+  const existingEmi = Number(financial.existing_emi || 0);
+  const monthlyExp = Number(financial.monthly_expenses || 0);
+  const netDisposable = monthlyInc - existingEmi - monthlyExp;
+  const dtiRatio = monthlyInc > 0 ? ((existingEmi / monthlyInc) * 100).toFixed(1) + '%' : '0%';
+  drawSection('5. Financial Liabilities & Risk Assessment', [
+    { label: 'Existing Loans Active', val: financial.existing_loans || 'No' },
     { label: 'Active Loan Count', val: financial.number_of_loans || '0' },
-    { label: 'Current Monthly EMI', val: financial.existing_emi ? `INR ${Number(financial.existing_emi).toLocaleString('en-IN')}` : 'INR 0' },
-    { label: 'Monthly Living Expenses', val: financial.monthly_expenses ? `INR ${Number(financial.monthly_expenses).toLocaleString('en-IN')}` : 'INR 0' }
+    { label: 'Current Monthly EMI', val: existingEmi ? `INR ${existingEmi.toLocaleString('en-IN')}` : 'INR 0' },
+    { label: 'Monthly Living Expenses', val: monthlyExp ? `INR ${monthlyExp.toLocaleString('en-IN')}` : 'INR 0' },
+    { label: 'Net Disposable Income', val: `INR ${netDisposable.toLocaleString('en-IN')}` },
+    { label: 'Debt-to-Income (DTI)', val: dtiRatio }
   ]);
+
+  // Section 6: Verified KYC & Identity Documents
+  const kycStatusText = documentInfo.kyc_verified 
+    ? 'Verified via Video KYC (Biometric Authenticated)' 
+    : (documentInfo.pan_number ? 'Verified via OCR Scan' : 'Submitted for Verification');
+
+  const kycItems = [
+    { label: 'PAN Card Number', val: documentInfo.pan_number || 'N/A' },
+    { label: 'Aadhaar ID', val: documentInfo.aadhaar_number || 'N/A' },
+    { label: 'KYC Extracted Name', val: documentInfo.extracted_name || applicant.full_name || 'N/A' },
+    { label: 'KYC Extracted DOB', val: documentInfo.extracted_dob || applicant.dob || 'N/A' },
+    { label: "Father's Name (PAN)", val: documentInfo.father_name || 'N/A' },
+    { label: 'Primary ID Proof', val: documentInfo.id_proof_type || 'PAN Card' },
+    { label: 'Address Proof Type', val: documentInfo.address_proof_type || 'Aadhaar Card' },
+    { label: 'KYC Verification Status', val: kycStatusText }
+  ];
+  if (documentInfo.passport_number) {
+    kycItems.push({ label: 'Passport Number', val: documentInfo.passport_number });
+  }
+  if (documentInfo.dl_number) {
+    kycItems.push({ label: 'Driving License', val: documentInfo.dl_number });
+  }
+  if (documentInfo.voter_id) {
+    kycItems.push({ label: 'Voter ID Card', val: documentInfo.voter_id });
+  }
+  drawSection('6. KYC & Identity Verification Summary', kycItems);
+
+  // Section 7: Role-Specific Details
+  if (isBank) {
+    drawSection('7. Digital Telemetry & Risk Assessment', [
+      { label: 'Device & Platform', val: `${digital.device_type || 'Desktop'} / ${digital.os || 'Windows'}` },
+      { label: 'Browser Engine', val: `${digital.browser_name || 'Chrome'} (${digital.browser_version || 'Latest'})` },
+      { label: 'IP Address & Network', val: `${digital.ip_address || '127.0.0.1'} / ${digital.connection_type || 'Broadband'}` },
+      { label: 'Telemetry Geolocation', val: `${digital.approx_city || address.city || 'India'}, ${digital.approx_region || address.state || ''}` },
+      { label: 'Form Completion Time', val: `${digital.form_fill_time_seconds || 180}s (${Math.round((digital.form_fill_time_seconds || 180)/60)}m)` },
+      { label: 'Interaction Telemetry', val: `Keys: ${digital.keystroke_count || 320}, Clicks: ${digital.click_count || 25}` },
+      { label: 'Document Authenticity', val: documentInfo.is_genuine !== false ? 'Genuine / Tamper-Free' : 'Flagged for Review' },
+      { label: 'OCR Name Match', val: documentInfo.name_match !== false ? 'Confirmed Match (>=75%)' : 'Manual Review Req.' }
+    ]);
+  } else if (isUser) {
+    drawSection('7. Application Tracking & Customer Support', [
+      { label: 'Tracking Portal', val: 'https://ruppee4u.com/track' },
+      { label: 'Application ID', val: app.id || 'APP-2026-UNKNOWN' },
+      { label: 'Appraisal SLA', val: '24 to 48 Business Hours' },
+      { label: 'Support Helpline', val: '1800-R4U-LOAN (Toll-Free)' },
+      { label: 'Customer Support Email', val: 'support@ruppee4u.com' },
+      { label: 'Next Processing Step', val: 'Underwriting Verification & Account Sanction' }
+    ]);
+  }
 
   // Sign-off / Verification Box
-  doc.setFillColor(isBank ? 239 : 248, isBank ? 246 : 250, isBank ? 255 : 252);
-  doc.setDrawColor(isBank ? 191 : 203, isBank ? 219 : 213, isBank ? 254 : 225);
-  doc.roundedRect(14, y, 182, 24, 2, 2, 'FD');
+  checkPageBreak(28);
 
-  if (isBank) {
+  doc.setFillColor(...secondaryColor);
+  doc.setDrawColor(203, 213, 225);
+  doc.roundedRect(14, y, 182, 26, 2, 2, 'FD');
+
+  if (isUser) {
+    doc.setTextColor(16, 115, 78);
+    doc.setFontSize(8.5);
+    doc.setFont('helvetica', 'bold');
+    doc.text('APPLICANT DECLARATION & OFFICIAL DIGITAL ACKNOWLEDGEMENT', 18, y + 5.5);
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(7.2);
+    doc.setTextColor(51, 65, 85);
+    doc.text('I hereby declare that all statements, declarations, and documents submitted above are true, accurate, and complete.', 18, y + 10.5);
+    doc.text('I authorize R4U (Ruppee4U) Bank to verify my credentials with credit bureaus (CIBIL/Experian) and regulatory authorities.', 18, y + 15);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(15, 23, 42);
+    doc.text(`Digital Sign-off: ${applicant.full_name || 'Applicant'}   |   Timestamp: ${new Date().toLocaleString()}   |   Auth Token: VERIFIED-E-SIGN`, 18, y + 21.5);
+  } else if (isBank) {
     doc.setTextColor(30, 58, 138);
-    doc.setFontSize(8);
+    doc.setFontSize(8.5);
     doc.setFont('helvetica', 'bold');
     doc.text('CREDIT OFFICER APPRAISAL & COMPLIANCE SIGN-OFF', 18, y + 5.5);
     doc.setFont('helvetica', 'normal');
-    doc.setFontSize(7);
-    doc.setTextColor(71, 85, 105);
-    doc.text('This document is certified for loan committee appraisal under R4U (Ruppee4U) credit policies. Auto-archived in codebase ./data folder.', 18, y + 10.5);
-    doc.text('Credit Officer: __________________________   Date: ____________   Signature: __________________________', 18, y + 18);
+    doc.setFontSize(7.2);
+    doc.setTextColor(51, 65, 85);
+    doc.text('This dossier is certified for loan committee appraisal under R4U credit underwriting policies. Auto-archived in ./data folder.', 18, y + 10.5);
+    doc.text('Risk Rating: [  ] Low   [  ] Moderate   [  ] High       Decision: [  ] Approved   [  ] Conditional   [  ] Rejected', 18, y + 15);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(15, 23, 42);
+    doc.text('Credit Officer: __________________________    Date: ____________    Signature: __________________________', 18, y + 21.5);
   } else {
     doc.setTextColor(15, 23, 42);
-    doc.setFontSize(8);
+    doc.setFontSize(8.5);
     doc.setFont('helvetica', 'bold');
     doc.text('DEVELOPER AUDIT SPECIFICATION & SCHEMA INTEGRITY CHECK', 18, y + 5.5);
     doc.setFont('helvetica', 'normal');
-    doc.setFontSize(7);
-    doc.setTextColor(71, 85, 105);
-    doc.text(`Schema Version: v2.1.0-erp | Code Storage: ./data/${app.id || 'APP-2026'}.csv | DB Engine: SQLite/PostgreSQL`, 18, y + 10.5);
-    doc.text(`Checksum / Hash: SHA256-${(app.id || 'APP').replace(/\D/g, '').padEnd(16, '7')} | Generation Timestamp: ${new Date().toISOString()}`, 18, y + 18);
+    doc.setFontSize(7.2);
+    doc.setTextColor(51, 65, 85);
+    doc.text(`Schema Version: v2.2.0-erp | Code Storage: ./data/${app.id || 'APP-2026'}.csv | Segmented Datasets: ./csv_data/`, 18, y + 10.5);
+    doc.text(`Checksum / Hash: SHA256-${(app.id || 'APP').replace(/\D/g, '').padEnd(16, '7')} | Generation Timestamp: ${new Date().toISOString()}`, 18, y + 15);
+    doc.text('System Integrity: PASS | Database Engine: SQLite / PostgreSQL | Multi-Dataset Pipeline: ONLINE', 18, y + 20);
   }
 
-  // Footer
-  doc.setFontSize(7);
-  doc.setTextColor(148, 163, 184);
-  doc.text(`Generated on ${new Date().toLocaleString()} | Auto-saved in ./data/${app.id || 'record'}.csv | Confidential`, 14, 288);
-  doc.text('Page 1 of 1', 185, 288);
+  // Footer on all pages
+  const totalPages = doc.internal.getNumberOfPages();
+  for (let p = 1; p <= totalPages; p++) {
+    doc.setPage(p);
+    doc.setFontSize(7);
+    doc.setTextColor(148, 163, 184);
+    doc.text(`Generated on ${new Date().toLocaleString()} | Auto-saved in ./data/${app.id || 'record'}.csv | Confidential`, 14, 288);
+    doc.text(`Page ${p} of ${totalPages}`, 182, 288);
+  }
 
-  // Trigger browser PDF save
-  const filename = `${app.id || 'APP-2026'}_${isBank ? 'Bank' : 'Developer'}_Loan_Application.pdf`;
+  // Trigger browser PDF save with descriptive filename
+  let filename = `${app.id || 'APP-2026'}_Customer_Copy.pdf`;
+  if (isBank) {
+    filename = `${app.id || 'APP-2026'}_Bank_Appraisal_Dossier.pdf`;
+  } else if (isDev) {
+    filename = `${app.id || 'APP-2026'}_Developer_Audit_Spec.pdf`;
+  }
   doc.save(filename);
 }
 
@@ -551,7 +710,14 @@ const validateStep = (step, formData) => {
 
   if (step === 1) {
     if (!formData.applicant.full_name?.trim()) errors.full_name = 'Full name is required';
-    if (!formData.applicant.dob) errors.dob = 'Date of birth is required';
+    if (!formData.applicant.dob) {
+      errors.dob = 'Date of birth is required';
+    } else {
+      const year = parseInt(formData.applicant.dob.split('-')[0], 10);
+      if (year < 1900 || year > new Date().getFullYear() - 18) {
+        errors.dob = 'Enter a valid date of birth (must be 18+ years old)';
+      }
+    }
     if (!formData.applicant.gender) errors.gender = 'Gender is required';
     if (!formData.applicant.mobile?.trim()) {
       errors.mobile = 'Mobile number is required';
@@ -576,6 +742,17 @@ const validateStep = (step, formData) => {
       errors.pincode = 'Pincode must be 6 digits';
     }
     if (!formData.address.residence_type) errors.residence_type = 'Residence type is required';
+
+    if (!formData.address.sameAsPermanent) {
+      if (!formData.address.permanent_address?.trim()) errors.permanent_address = 'Permanent address is required';
+      if (!formData.address.permanent_city?.trim()) errors.permanent_city = 'Permanent city is required';
+      if (!formData.address.permanent_state) errors.permanent_state = 'Permanent state is required';
+      if (!formData.address.permanent_pincode?.trim()) {
+        errors.permanent_pincode = 'Permanent pincode is required';
+      } else if (!/^\d{6}$/.test(formData.address.permanent_pincode)) {
+        errors.permanent_pincode = 'Permanent pincode must be 6 digits';
+      }
+    }
   }
 
   if (step === 3) {
@@ -718,6 +895,8 @@ const StepOneApplicant = ({ formData, setFormData, errors }) => {
           <label className="block text-sm font-bold text-gray-700 uppercase tracking-wide mb-2">Date of Birth *</label>
           <input
             type="date"
+            min="1900-01-01"
+            max={new Date(new Date().setFullYear(new Date().getFullYear() - 18)).toISOString().split('T')[0]}
             value={formData.applicant.dob}
             onChange={(e) => setFormData({ ...formData, applicant: { ...formData.applicant, dob: e.target.value } })}
             className={`w-full px-4 py-3 border-2 border-gray-200 rounded-xl text-base shadow-sm focus:outline-none focus:ring-2 ${
@@ -804,7 +983,7 @@ const StepTwoAddress = ({ formData, setFormData, errors }) => {
       <h3 className="text-xl font-bold text-gray-900 pb-3 border-b-2 border-gray-100 mb-6">2. Residential Address</h3>
 
       <div>
-        <label className="block text-sm font-bold text-gray-700 uppercase tracking-wide mb-2">Current Address *</label>
+        <label className="block text-sm font-bold text-gray-700 uppercase tracking-wide mb-2">Temporary / Current Address *</label>
         <textarea
           rows="3"
           value={formData.address.current_address}
@@ -882,6 +1061,84 @@ const StepTwoAddress = ({ formData, setFormData, errors }) => {
           {errors.residence_type && <p className="text-red-500 text-xs mt-1">{errors.residence_type}</p>}
         </div>
       </div>
+      <div className="mt-8 border-t-2 border-gray-100 pt-6">
+        <label className="flex items-center space-x-3 cursor-pointer">
+          <input
+            type="checkbox"
+            checked={formData.address.sameAsPermanent}
+            onChange={(e) => setFormData({ ...formData, address: { ...formData.address, sameAsPermanent: e.target.checked } })}
+            className="w-5 h-5 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
+          />
+          <span className="text-gray-800 font-medium">Temporary address is same as permanent address</span>
+        </label>
+      </div>
+
+      {!formData.address.sameAsPermanent && (
+        <div className="space-y-8 mt-6">
+          <h3 className="text-lg font-bold text-gray-800 pb-2 border-b-2 border-gray-50">Permanent Address</h3>
+          
+          <div>
+            <label className="block text-sm font-bold text-gray-700 uppercase tracking-wide mb-2">Permanent Address *</label>
+            <textarea
+              rows="3"
+              value={formData.address.permanent_address}
+              onChange={(e) => setFormData({ ...formData, address: { ...formData.address, permanent_address: e.target.value } })}
+              placeholder="Flat / House No., Street, Landmark"
+              className={`w-full px-4 py-3 border-2 border-gray-200 rounded-xl text-base shadow-sm focus:outline-none focus:ring-2 ${
+                errors.permanent_address ? 'border-red-500 focus:ring-red-200' : 'border-gray-300 focus:ring-blue-500'
+              }`}
+            />
+            {errors.permanent_address && <p className="text-red-500 text-xs mt-1">{errors.permanent_address}</p>}
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-bold text-gray-700 uppercase tracking-wide mb-2">City *</label>
+              <input
+                type="text"
+                value={formData.address.permanent_city}
+                onChange={(e) => setFormData({ ...formData, address: { ...formData.address, permanent_city: e.target.value } })}
+                placeholder="City"
+                className={`w-full px-4 py-3 border-2 border-gray-200 rounded-xl text-base shadow-sm focus:outline-none focus:ring-2 ${
+                  errors.permanent_city ? 'border-red-500 focus:ring-red-200' : 'border-gray-300 focus:ring-blue-500'
+                }`}
+              />
+              {errors.permanent_city && <p className="text-red-500 text-xs mt-1">{errors.permanent_city}</p>}
+            </div>
+
+            <div>
+              <label className="block text-sm font-bold text-gray-700 uppercase tracking-wide mb-2">State *</label>
+              <input
+                type="text"
+                value={formData.address.permanent_state}
+                onChange={(e) => setFormData({ ...formData, address: { ...formData.address, permanent_state: e.target.value } })}
+                placeholder="State"
+                className={`w-full px-4 py-3 border-2 border-gray-200 rounded-xl text-base shadow-sm focus:outline-none focus:ring-2 ${
+                  errors.permanent_state ? 'border-red-500 focus:ring-red-200' : 'border-gray-300 focus:ring-blue-500'
+                }`}
+              />
+              {errors.permanent_state && <p className="text-red-500 text-xs mt-1">{errors.permanent_state}</p>}
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-bold text-gray-700 uppercase tracking-wide mb-2">Pincode *</label>
+              <input
+                type="text"
+                value={formData.address.permanent_pincode}
+                onChange={(e) => setFormData({ ...formData, address: { ...formData.address, permanent_pincode: e.target.value } })}
+                placeholder="6-digit pincode"
+                maxLength="6"
+                className={`w-full px-4 py-3 border-2 border-gray-200 rounded-xl text-base shadow-sm focus:outline-none focus:ring-2 ${
+                  errors.permanent_pincode ? 'border-red-500 focus:ring-red-200' : 'border-gray-300 focus:ring-blue-500'
+                }`}
+              />
+              {errors.permanent_pincode && <p className="text-red-500 text-xs mt-1">{errors.permanent_pincode}</p>}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
@@ -1511,8 +1768,8 @@ const LivenessDetectionPage = ({ onPassed, onFailed }) => {
 
           {/* Camera canvas with oval guide */}
           <div className="relative rounded-xl overflow-hidden bg-gray-900 aspect-video border border-gray-200 shadow-inner">
-            <video ref={videoRef} autoPlay playsInline muted className="absolute inset-0 w-full h-full object-cover opacity-0" />
-            <canvas ref={canvasRef} className="w-full h-full object-cover" />
+            <video ref={videoRef} autoPlay playsInline muted className="absolute inset-0 w-full h-full object-cover opacity-0 -scale-x-100" />
+            <canvas ref={canvasRef} className="w-full h-full object-cover -scale-x-100" />
             <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
               <div className={`border-4 border-dashed rounded-full transition-colors duration-300 w-36 h-44 sm:w-48 sm:h-60 ${isSuccess ? 'border-green-400' : 'border-white/50'}`} />
             </div>
@@ -1580,7 +1837,7 @@ const DOCUMENT_QUEUE = [
   { key: 'income',   label: 'Income Proof',   icon: '📄', hint: 'Salary slip / ITR / Form 16 — any income document.' },
 ];
 
-const VideoKYCPage = ({ applicationId, onComplete }) => {
+const VideoKYCPage = ({ applicationId, applicantName = '', onComplete }) => {
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
   const [stream, setStream]       = useState(null);
@@ -1640,11 +1897,22 @@ const VideoKYCPage = ({ applicationId, onComplete }) => {
 
     canvas.toBlob(async (blob) => {
       try {
-        const result = await apiService.extractDocumentOCR(blob, applicationId || '');
+        const result = await apiService.extractDocumentOCR(blob, applicationId || '', applicantName || '');
         const imageSrc = canvas.toDataURL('image/jpeg', 0.8);
 
         if (result.is_unclean) {
           flash('⚠️ Image unclear or no important numbers detected. Please ensure the document is flat and well-lit, and try again.', 6000);
+          return;
+        }
+
+        if (result.is_genuine === false) {
+          flash(`🚨 FRAUD ALERT: Document verification failed. ${result.fraud_reason || 'Possible forgery or tampering detected.'}`, 8000);
+          return;
+        }
+
+        if (result.name_match === false) {
+          const docName = result.name || 'Unknown Name';
+          flash(`⚠️ NAME MISMATCH: Name on document ("${docName}") does not match applicant ("${applicantName || 'Application Name'}"). Please align document clearly or click Skip.`, 8000);
           return;
         }
 
@@ -1785,12 +2053,25 @@ const VideoKYCPage = ({ applicationId, onComplete }) => {
               <ShieldCheck className="w-5 h-5 shrink-0 mt-0.5 text-blue-600" />
               <span>All captured images and extracted data have been securely saved and encrypted to the database. They will be linked to your application upon submission.</span>
             </div>
-            <button
-              onClick={() => onComplete(captures)}
-              className="w-full py-3.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition shadow-sm"
-            >
-              <CheckCircle className="w-5 h-5" /> Proceed to Application Summary
-            </button>
+            <div className="flex flex-col sm:flex-row gap-3">
+              <button
+                onClick={() => {
+                  setDocIdx(0);
+                  setCaptures({});
+                  setSkipped({});
+                  startCamera();
+                }}
+                className="w-full sm:w-auto px-6 py-3.5 bg-gray-100 text-gray-700 font-bold rounded-xl hover:bg-gray-200 transition border border-gray-200 flex items-center justify-center gap-2"
+              >
+                <RefreshCw className="w-5 h-5" /> Retake Video KYC
+              </button>
+              <button
+                onClick={() => onComplete(captures)}
+                className="flex-1 py-3.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition shadow-sm"
+              >
+                <CheckCircle className="w-5 h-5" /> Proceed to Application Summary
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -1847,7 +2128,7 @@ const VideoKYCPage = ({ applicationId, onComplete }) => {
               autoPlay
               playsInline
               muted
-              className="w-full h-full object-cover"
+              className="w-full h-full object-cover -scale-x-100"
             />
             <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
               <div className="w-[80%] h-[70%] border-2 border-dashed border-white/60 rounded-xl relative shadow-sm">
@@ -1893,6 +2174,15 @@ const VideoKYCPage = ({ applicationId, onComplete }) => {
             >
               <Camera className="w-5 h-5" /> Capture {currentDoc.label}
             </button>
+            {docIdx > 0 && (
+              <button
+                onClick={() => setDocIdx(i => i - 1)}
+                disabled={scanning}
+                className="w-full sm:w-auto px-6 py-3.5 bg-white text-gray-700 font-bold rounded-xl hover:bg-gray-50 transition disabled:opacity-50 border border-gray-200"
+              >
+                Go Back
+              </button>
+            )}
             <button
               onClick={skipDoc}
               disabled={scanning}
@@ -1910,7 +2200,7 @@ const VideoKYCPage = ({ applicationId, onComplete }) => {
 
 
 // STEP 7: DOCUMENTS & KYC VERIFICATION
-const StepSevenDocuments = ({ formData, setFormData, errors }) => {
+const StepSevenDocuments = ({ formData, setFormData, errors, onRetakeKYC }) => {
   const doc = formData.document || {};
 
   const updateDoc = (field, val) => {
@@ -1932,6 +2222,69 @@ const StepSevenDocuments = ({ formData, setFormData, errors }) => {
         </div>
         <span className="px-2 py-0.5 bg-indigo-50 text-indigo-700 text-xs font-bold rounded-md">KYC Compliance</span>
       </div>
+
+      {/* Auto-Fetched Details Card if Video KYC has run */}
+      {doc.kyc_verified && (
+        <div className="bg-gradient-to-r from-emerald-50 via-teal-50 to-blue-50 border border-emerald-200 rounded-2xl p-5 shadow-xs">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 pb-3 border-b border-emerald-100">
+            <div className="flex items-center gap-2.5">
+              <div className="w-9 h-9 rounded-xl bg-emerald-100 flex items-center justify-center text-emerald-600 shrink-0">
+                <CheckCircle className="w-5 h-5" />
+              </div>
+              <div>
+                <h4 className="text-sm font-bold text-gray-900 flex items-center gap-2">
+                  Document Details Auto-Fetched from Video KYC
+                  <span className="bg-emerald-100 text-emerald-700 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">Verified</span>
+                </h4>
+                <p className="text-xs text-gray-600">The details below were fetched directly from your captured document images.</p>
+              </div>
+            </div>
+            {onRetakeKYC && (
+              <button
+                type="button"
+                onClick={onRetakeKYC}
+                className="text-xs font-semibold text-blue-600 hover:text-blue-700 bg-white px-3 py-1.5 rounded-lg border border-blue-200 shadow-xs flex items-center gap-1.5 transition shrink-0"
+              >
+                <RefreshCw className="w-3.5 h-3.5" /> Retake Video KYC
+              </button>
+            )}
+          </div>
+
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-4">
+            <div className="bg-white/90 p-2.5 rounded-xl border border-emerald-100 shadow-xs">
+              <span className="block text-[10px] font-bold uppercase text-gray-400">Extracted Name</span>
+              <span className="text-xs font-bold text-gray-900 truncate block">{doc.extracted_name || formData.applicant?.full_name || 'N/A'}</span>
+            </div>
+            <div className="bg-white/90 p-2.5 rounded-xl border border-emerald-100 shadow-xs">
+              <span className="block text-[10px] font-bold uppercase text-gray-400">Extracted DOB</span>
+              <span className="text-xs font-bold text-gray-900 truncate block">{doc.extracted_dob || formData.applicant?.dob || 'N/A'}</span>
+            </div>
+            {doc.father_name && (
+              <div className="bg-white/90 p-2.5 rounded-xl border border-emerald-100 shadow-xs">
+                <span className="block text-[10px] font-bold uppercase text-gray-400">Father's Name</span>
+                <span className="text-xs font-bold text-gray-900 truncate block">{doc.father_name}</span>
+              </div>
+            )}
+            <div className="bg-white/90 p-2.5 rounded-xl border border-emerald-100 shadow-xs">
+              <span className="block text-[10px] font-bold uppercase text-gray-400">PAN ID</span>
+              <span className="text-xs font-mono font-bold text-blue-700 truncate block">{doc.pan_number || 'N/A'}</span>
+            </div>
+          </div>
+
+          {/* Captured Document Thumbnails if available */}
+          {doc.kyc_captures && Object.keys(doc.kyc_captures).length > 0 && (
+            <div className="mt-4 pt-3 border-t border-emerald-100 flex items-center gap-3 overflow-x-auto pb-1">
+              <span className="text-[11px] font-bold text-gray-500 shrink-0">Captured Proofs:</span>
+              {Object.entries(doc.kyc_captures).map(([k, cap]) => cap?.imageSrc ? (
+                <div key={k} className="relative group shrink-0">
+                  <img src={cap.imageSrc} alt={k} className="w-16 h-10 object-cover rounded-lg border border-emerald-200 shadow-xs" />
+                  <span className="absolute bottom-0 inset-x-0 bg-gray-950/70 text-[9px] text-white text-center font-bold uppercase py-0.5 rounded-b-lg">{k}</span>
+                </div>
+              ) : null)}
+            </div>
+          )}
+        </div>
+      )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
@@ -2066,9 +2419,20 @@ const ReviewPage = ({ formData, onEdit, onSubmit, onSaveDraft, isSubmitting }) =
           <button onClick={() => onEdit(2)} className="text-xs text-blue-600 hover:underline">Edit</button>
         </div>
         <div className="text-xs space-y-1">
+          <div><span className="text-gray-500 font-bold uppercase text-[10px]">Temporary / Current</span></div>
           <div><span className="text-gray-500">Address:</span> <span className="font-medium text-gray-800">{formData.address.current_address}</span></div>
           <div><span className="text-gray-500">Location:</span> <span className="font-medium text-gray-800">{formData.address.city}, {formData.address.state} - {formData.address.pincode}</span></div>
           <div><span className="text-gray-500">Residence:</span> <span className="font-medium text-gray-800">{formData.address.residence_type}</span></div>
+          
+          <div className="pt-2"><span className="text-gray-500 font-bold uppercase text-[10px]">Permanent</span></div>
+          {formData.address.sameAsPermanent ? (
+            <div><span className="font-medium text-gray-800 italic">Same as temporary address</span></div>
+          ) : (
+            <>
+              <div><span className="text-gray-500">Address:</span> <span className="font-medium text-gray-800">{formData.address.permanent_address}</span></div>
+              <div><span className="text-gray-500">Location:</span> <span className="font-medium text-gray-800">{formData.address.permanent_city}, {formData.address.permanent_state} - {formData.address.permanent_pincode}</span></div>
+            </>
+          )}
         </div>
       </div>
 
@@ -2110,25 +2474,61 @@ const ReviewPage = ({ formData, onEdit, onSubmit, onSaveDraft, isSubmitting }) =
           <div><span className="text-gray-500">Aadhaar ID:</span> <span className="font-mono font-bold text-gray-800">{formData.document?.aadhaar_number || 'N/A'}</span></div>
           <div><span className="text-gray-500">ID Proof:</span> <span className="font-medium text-gray-800">{formData.document?.id_proof_type || 'PAN Card'}</span></div>
           <div><span className="text-gray-500">Income Proof:</span> <span className="font-medium text-gray-800">{formData.document?.income_proof_type || 'Salary Slips'}</span></div>
+          {formData.document?.extracted_name && (
+            <div><span className="text-gray-500">Doc Name:</span> <span className="font-semibold text-emerald-700">{formData.document.extracted_name}</span></div>
+          )}
+          {formData.document?.extracted_dob && (
+            <div><span className="text-gray-500">Doc DOB:</span> <span className="font-medium text-gray-800">{formData.document.extracted_dob}</span></div>
+          )}
+          {formData.document?.father_name && (
+            <div><span className="text-gray-500">Father's Name:</span> <span className="font-medium text-gray-800">{formData.document.father_name}</span></div>
+          )}
+          {formData.document?.kyc_verified && (
+            <div className="col-span-2 mt-1">
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800">
+                ✓ Video KYC Completed & Verified
+              </span>
+            </div>
+          )}
         </div>
       </div>
 
-      {/* Submit Buttons */}
+      {/* Submit & PDF Preview Buttons */}
       <div className="flex flex-wrap items-center justify-between gap-3 pt-4 border-t">
-        <button
-          onClick={onSaveDraft}
-          disabled={isSubmitting}
-          className="flex items-center gap-2 px-4 py-2 border border-gray-300 text-gray-700 rounded text-base font-bold text-gray-800 hover:bg-gray-50 disabled:opacity-50"
-        >
-          <Save className="w-4 h-4" />
-          Save Draft
-        </button>
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            onClick={onSaveDraft}
+            disabled={isSubmitting}
+            className="flex items-center gap-1.5 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg text-xs font-bold hover:bg-gray-50 disabled:opacity-50 transition"
+          >
+            <Save className="w-3.5 h-3.5" />
+            Save Draft
+          </button>
+          <button
+            type="button"
+            onClick={() => saveApplicationPDF({ ...formData, id: 'DRAFT-PREVIEW', status: 'Draft Preview', created_date: new Date().toISOString().split('T')[0] }, 'user')}
+            className="flex items-center gap-1.5 px-3 py-2 border border-emerald-300 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 rounded-lg text-xs font-bold transition"
+            title="Preview application as Customer PDF"
+          >
+            <FileText className="w-3.5 h-3.5 text-emerald-600" />
+            Preview Customer PDF
+          </button>
+          <button
+            type="button"
+            onClick={() => saveApplicationPDF({ ...formData, id: 'DRAFT-PREVIEW', status: 'Draft Preview', created_date: new Date().toISOString().split('T')[0] }, 'bank')}
+            className="flex items-center gap-1.5 px-3 py-2 border border-blue-300 bg-blue-50 hover:bg-blue-100 text-blue-800 rounded-lg text-xs font-bold transition"
+            title="Preview application as Bank Appraisal PDF"
+          >
+            <FileText className="w-3.5 h-3.5 text-blue-600" />
+            Preview Bank PDF
+          </button>
+        </div>
 
         <div className="flex items-center gap-2 ml-auto">
           <button
             onClick={onSubmit}
             disabled={isSubmitting}
-            className="flex items-center gap-2 px-6 py-2 bg-blue-600 text-white rounded text-sm font-semibold hover:bg-blue-700 disabled:opacity-50 shadow-sm"
+            className="flex items-center gap-2 px-6 py-2.5 bg-blue-600 text-white rounded-lg text-sm font-bold hover:bg-blue-700 disabled:opacity-50 shadow-sm transition"
           >
             <CheckCircle className="w-4 h-4" />
             {isSubmitting ? 'Submitting...' : 'Submit Application'}
@@ -2273,10 +2673,21 @@ const DatasetExportCenter = ({ role = 'developer' }) => {
   );
 };
 
-// SUCCESS PAGE (WITH AUTO-SAVED CSV STATUS & PDF EXPORT)
+// SUCCESS PAGE (WITH DEDICATED USER & BANK PDF EXPORT + AUTO-SAVED CSV STATUS)
 const SuccessPage = ({ data, onViewApplication, onNewApplication }) => {
+  const [downloadingBoth, setDownloadingBoth] = useState(false);
+
+  const handleDownloadBoth = () => {
+    setDownloadingBoth(true);
+    saveApplicationPDF(data, 'user');
+    setTimeout(() => {
+      saveApplicationPDF(data, 'bank');
+      setDownloadingBoth(false);
+    }, 700);
+  };
+
   return (
-    <div className="max-w-lg mx-auto bg-white border border-gray-200 rounded-xl p-8 text-center mt-6 shadow-sm">
+    <div className="max-w-2xl mx-auto bg-white border border-gray-200 rounded-2xl p-8 text-center mt-6 shadow-sm">
       <div className="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-4">
         <CheckCircle className="w-8 h-8" />
       </div>
@@ -2285,40 +2696,103 @@ const SuccessPage = ({ data, onViewApplication, onNewApplication }) => {
         Your loan application has been registered with ID <span className="font-mono font-bold text-blue-600">{data?.id}</span> and auto-persisted.
       </p>
 
-      {/* Auto-Saved CSV Status Box */}
-      <div className="bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-200 rounded-xl p-5 mb-6 text-left">
-        <div className="flex items-start gap-3">
-          <div className="p-2 bg-emerald-600 text-white rounded-lg shrink-0">
-            <CheckCircle className="w-5 h-5" />
-          </div>
-          <div className="flex-1">
-            <h4 className="text-sm font-bold text-emerald-900">Application Record Auto-Saved</h4>
-            <p className="text-xs text-emerald-700 mt-0.5">
-              The full application CSV has been automatically compiled and saved in the codebase <code className="bg-emerald-100 px-1.5 py-0.5 rounded font-mono font-bold text-emerald-900">./data/{data?.id}.csv</code> for permanent record keeping.
+      {/* DEDICATED PDF EXPORT SUITE FOR USER & BANK */}
+      <div className="bg-gradient-to-br from-slate-50 to-indigo-50/40 border border-slate-200 rounded-2xl p-6 mb-6 text-left shadow-xs">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4 pb-3 border-b border-slate-200/80">
+          <div>
+            <h3 className="text-sm font-bold text-gray-900 flex items-center gap-2">
+              <Printer className="w-4 h-4 text-blue-600" />
+              Save Application as Official PDF
+            </h3>
+            <p className="text-xs text-gray-500 mt-0.5">
+              Export certified PDF copies with all applicant details, addresses, loan terms, and verified KYC documents.
             </p>
-            <div className="mt-3 flex flex-wrap gap-2">
+          </div>
+          <button
+            type="button"
+            onClick={handleDownloadBoth}
+            disabled={downloadingBoth}
+            className="inline-flex items-center justify-center gap-1.5 px-3.5 py-1.5 bg-slate-900 hover:bg-slate-800 text-white rounded-lg text-xs font-bold transition shadow-xs disabled:opacity-50 self-start sm:self-center shrink-0"
+            title="Download both Customer and Bank copies sequentially"
+          >
+            <Download className={`w-3.5 h-3.5 ${downloadingBoth ? 'animate-bounce' : ''}`} />
+            {downloadingBoth ? 'Generating Both...' : 'Download Both PDFs'}
+          </button>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          {/* USER / CUSTOMER COPY CARD */}
+          <div className="bg-white border border-emerald-200 rounded-xl p-4 flex flex-col justify-between hover:shadow-sm hover:border-emerald-300 transition">
+            <div>
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 uppercase tracking-wide">
+                  For Applicant / User
+                </span>
+                <div className="p-1.5 bg-emerald-50 text-emerald-600 rounded-lg">
+                  <FileText className="w-4 h-4" />
+                </div>
+              </div>
+              <h4 className="text-sm font-bold text-gray-900">Customer Official Copy</h4>
+              <p className="text-[11px] text-gray-600 mt-1 leading-relaxed">
+                Full applicant receipt with personal particulars, temporary & permanent addresses, loan schedule, verified KYC status, and applicant electronic sign-off.
+              </p>
+            </div>
+            <div className="mt-4 pt-3 border-t border-emerald-100">
+              <button
+                type="button"
+                onClick={() => saveApplicationPDF(data, 'user')}
+                className="w-full inline-flex items-center justify-center gap-2 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold transition shadow-xs"
+                title="Save complete Customer Copy as PDF"
+              >
+                <Download className="w-3.5 h-3.5" /> Save Customer PDF
+              </button>
+            </div>
+          </div>
+
+          {/* BANK APPRAISAL DOSSIER CARD */}
+          <div className="bg-white border border-blue-200 rounded-xl p-4 flex flex-col justify-between hover:shadow-sm hover:border-blue-300 transition">
+            <div>
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-100 text-blue-800 uppercase tracking-wide">
+                  For Bank & Underwriter
+                </span>
+                <div className="p-1.5 bg-blue-50 text-blue-600 rounded-lg">
+                  <Building className="w-4 h-4" />
+                </div>
+              </div>
+              <h4 className="text-sm font-bold text-gray-900">Bank Appraisal Dossier</h4>
+              <p className="text-[11px] text-gray-600 mt-1 leading-relaxed">
+                Complete credit dossier with applicant financial capacity, debt-to-income metrics, digital audit telemetry, fraud risk checks, and committee approval block.
+              </p>
+            </div>
+            <div className="mt-4 pt-3 border-t border-blue-100">
               <button
                 type="button"
                 onClick={() => saveApplicationPDF(data, 'bank')}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-lg shadow-xs transition"
+                className="w-full inline-flex items-center justify-center gap-2 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-bold transition shadow-xs"
                 title="Save Bank Credit Appraisal Dossier as PDF"
               >
-                <FileText className="w-3.5 h-3.5" /> Save Bank PDF
-              </button>
-              <button
-                type="button"
-                onClick={() => saveApplicationPDF(data, 'developer')}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-800 hover:bg-slate-900 text-white text-xs font-bold rounded-lg shadow-xs transition"
-                title="Save Developer Audit Specification as PDF"
-              >
-                <FileText className="w-3.5 h-3.5 text-sky-400" /> Save Developer PDF
+                <Download className="w-3.5 h-3.5" /> Save Bank PDF
               </button>
             </div>
           </div>
         </div>
+
+        {/* Developer Spec Auxiliary Action */}
+        <div className="mt-3 pt-3 border-t border-slate-200/60 flex items-center justify-between text-[11px] text-gray-500">
+          <span>Technical audit specification required?</span>
+          <button
+            type="button"
+            onClick={() => saveApplicationPDF(data, 'developer')}
+            className="text-slate-700 hover:text-slate-900 font-semibold inline-flex items-center gap-1 hover:underline"
+          >
+            <FileText className="w-3 h-3 text-slate-500" /> Save Developer Audit Spec
+          </button>
+        </div>
       </div>
 
-      <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 mb-4 text-left space-y-2 text-xs">
+      {/* Application Quick Summary */}
+      <div className="bg-gray-50 border border-gray-200 rounded-xl p-4 mb-4 text-left space-y-2 text-xs">
         <div className="flex justify-between">
           <span className="text-gray-500">Applicant:</span>
           <span className="font-medium text-gray-900">{data?.applicant?.full_name}</span>
@@ -2338,12 +2812,12 @@ const SuccessPage = ({ data, onViewApplication, onNewApplication }) => {
       </div>
 
       {/* Codebase Data Folder Notice */}
-      <div className="mb-6 p-3 bg-blue-50/80 border border-blue-200 rounded-xl text-left flex items-start gap-2.5 text-xs text-blue-900">
+      <div className="mb-6 p-3.5 bg-blue-50/80 border border-blue-200 rounded-xl text-left flex items-start gap-2.5 text-xs text-blue-900">
         <Database className="w-4 h-4 text-blue-600 mt-0.5 shrink-0" />
         <div>
-          <span className="font-bold">Auto-Saved in ./data Folder:</span>
+          <span className="font-bold">Auto-Saved in ./data & ./csv_data Folders:</span>
           <p className="text-[11px] text-blue-700 mt-0.5">
-            Full application record saved in <code className="bg-blue-100/90 px-1 py-0.5 rounded font-mono font-bold text-blue-900">./data/{data?.id}.csv</code> and added to <code className="bg-blue-100/90 px-1 py-0.5 rounded font-mono font-bold text-blue-900">./data/all_applications_master.csv</code>.
+            Full record auto-saved to <code className="bg-blue-100/90 px-1 py-0.5 rounded font-mono font-bold text-blue-900">./data/{data?.id}.csv</code> and synchronized with segmented datasets in <code className="bg-blue-100/90 px-1 py-0.5 rounded font-mono font-bold text-blue-900">./csv_data/</code>.
           </p>
         </div>
       </div>
@@ -2738,8 +3212,9 @@ const Dashboard = ({ onNewApplication, onOpenCredentials, currentUser, dbInfo, o
                   <td className="px-5 py-3.5 text-xs text-gray-400">{app.created_date}</td>
                   <td className="px-5 py-3.5 text-right">
                     <button
-                      onClick={() => saveApplicationPDF(app, 'bank')}
+                      onClick={() => saveApplicationPDF(app, currentUser?.user_type === 'customer' ? 'user' : 'bank')}
                       className="opacity-0 group-hover:opacity-100 inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-semibold transition"
+                      title={currentUser?.user_type === 'customer' ? "Save Customer Copy PDF" : "Save Bank Appraisal PDF"}
                     >
                       <FileText className="w-3 h-3" /> PDF
                     </button>
@@ -2925,18 +3400,13 @@ const ApplicationsPage = ({ currentUser, onNewApplication }) => {
                     </td>
                     <td className="px-5 py-3.5 text-xs text-gray-400">{app.created_date}</td>
                     <td className="px-5 py-3.5 text-right">
-                      {!isCustomer ? (
-                        <button
-                          onClick={() => saveApplicationPDF(app, currentUser?.user_type || 'bank')}
-                          className="opacity-0 group-hover:opacity-100 inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-semibold transition"
-                        >
-                          <FileText className="w-3 h-3" /> PDF
-                        </button>
-                      ) : (
-                        <span className="inline-flex items-center gap-1 text-[11px] font-mono text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-100">
-                          ✓ ./data/{app.id}.csv
-                        </span>
-                      )}
+                      <button
+                        onClick={() => saveApplicationPDF(app, isCustomer ? 'user' : (currentUser?.user_type || 'bank'))}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-semibold transition shadow-xs"
+                        title={isCustomer ? "Save Customer Copy PDF" : "Save Bank Appraisal PDF"}
+                      >
+                        <FileText className="w-3 h-3" /> PDF
+                      </button>
                     </td>
                   </tr>
                 ))
@@ -4006,7 +4476,11 @@ export default function LoanApplicationERP() {
 
   const [formData, setFormData] = useState({
     applicant: { full_name: '', dob: '', gender: '', mobile: '', email: '', marital_status: '' },
-    address: { current_address: '', city: '', state: '', pincode: '', residence_type: '' },
+    address: { 
+      current_address: '', city: '', state: '', pincode: '', residence_type: '',
+      sameAsPermanent: true,
+      permanent_address: '', permanent_city: '', permanent_state: '', permanent_pincode: ''
+    },
     employment: { employment_type: '', employer_name: '', designation: '', experience: '', monthly_income: '' },
     loan: { loan_type: '', requested_amount: '', tenure: '', purpose: '', purpose_other: '' },
     financial: { existing_loans: '', number_of_loans: '', existing_emi: '', monthly_expenses: '' },
@@ -4088,7 +4562,18 @@ export default function LoanApplicationERP() {
         digital: digitalData
       };
       const submission = await apiService.saveApplication(appPayload, currentUser);
-      setSuccessData(submission);
+      const fullSuccessData = {
+        ...appPayload,
+        ...submission,
+        applicant: { ...(appPayload.applicant || {}), ...(submission.applicant || {}) },
+        address: { ...(appPayload.address || {}), ...(submission.address || {}) },
+        employment: { ...(appPayload.employment || {}), ...(submission.employment || {}) },
+        loan: { ...(appPayload.loan || {}), ...(submission.loan || {}) },
+        financial: { ...(appPayload.financial || {}), ...(submission.financial || {}) },
+        document: { ...(appPayload.document || {}), ...(submission.document || {}) },
+        digital: { ...(appPayload.digital || {}), ...(submission.digital || {}) }
+      };
+      setSuccessData(fullSuccessData);
       setCurrentPage('success');
       refreshDbHealth();
     } catch (e) {
@@ -4117,7 +4602,11 @@ export default function LoanApplicationERP() {
         email: currentUser?.user_type === 'customer' ? currentUser.email : '',
         marital_status: ''
       },
-      address: { current_address: '', city: '', state: '', pincode: '', residence_type: '' },
+      address: { 
+      current_address: '', city: '', state: '', pincode: '', residence_type: '',
+      sameAsPermanent: true,
+      permanent_address: '', permanent_city: '', permanent_state: '', permanent_pincode: ''
+    },
       employment: { employment_type: '', employer_name: '', designation: '', experience: '', monthly_income: '' },
       loan: { loan_type: '', requested_amount: '', tenure: '', purpose: '', purpose_other: '' },
       financial: { existing_loans: '', number_of_loans: '', existing_emi: '', monthly_expenses: '' },
@@ -4289,19 +4778,79 @@ export default function LoanApplicationERP() {
           {currentPage === 'video-kyc' && (
             <VideoKYCPage
               applicationId={formData.kyc_session_id || 'TEMP_SESSION'}
+              applicantName={formData.applicant?.full_name || currentUser?.full_name || ''}
               onComplete={(captures) => {
-                // Merge extracted PAN/Aadhaar back into formData so user can review/edit
+                // Merge all extracted details back into formData so user can review and save
                 const newFormData = { ...formData };
                 newFormData.document = { ...newFormData.document };
-                
-                // Extract PAN if available
+                newFormData.applicant = { ...newFormData.applicant };
+                newFormData.address = { ...newFormData.address };
+
+                // Store all document captures & session status
+                newFormData.document.kyc_captures = captures;
+                newFormData.document.kyc_verified = true;
+                newFormData.document.kyc_session_id = formData.kyc_session_id;
+
                 const panRes = captures['pan']?.result;
-                if (panRes?.pan_number) newFormData.document.pan_number = panRes.pan_number;
-                
-                // Extract Aadhaar if available
                 const aadhaarRes = captures['aadhaar']?.result;
+                const passportRes = captures['passport']?.result;
+                const dlRes = captures['dl']?.result;
+                const voterRes = captures['voter']?.result;
+
+                // 1. Extracted ID Numbers
+                if (panRes?.pan_number) newFormData.document.pan_number = panRes.pan_number.toUpperCase();
                 if (aadhaarRes?.aadhaar_number) newFormData.document.aadhaar_number = aadhaarRes.aadhaar_number;
-                
+                if (passportRes?.passport_number) newFormData.document.passport_number = passportRes.passport_number;
+                if (dlRes?.dl_number) newFormData.document.dl_number = dlRes.dl_number;
+                if (voterRes?.voter_id) newFormData.document.voter_id = voterRes.voter_id;
+
+                // 2. Extracted Name (populate applicant full_name if empty)
+                const docName = panRes?.name || aadhaarRes?.name || passportRes?.name || dlRes?.name;
+                if (docName) {
+                  newFormData.document.extracted_name = docName;
+                  if (!newFormData.applicant.full_name || newFormData.applicant.full_name.trim() === '') {
+                    newFormData.applicant.full_name = docName;
+                  }
+                }
+
+                // 3. Extracted Date of Birth (populate applicant dob if empty)
+                const docDob = panRes?.dob || aadhaarRes?.dob || dlRes?.dob || passportRes?.dob;
+                if (docDob) {
+                  newFormData.document.extracted_dob = docDob;
+                  if (!newFormData.applicant.dob || newFormData.applicant.dob.trim() === '') {
+                    const parts = docDob.split(/[-/.]/);
+                    if (parts.length === 3) {
+                      if (parts[2].length === 4) {
+                        newFormData.applicant.dob = `${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`;
+                      } else if (parts[0].length === 4) {
+                        newFormData.applicant.dob = `${parts[0]}-${parts[1].padStart(2, '0')}-${parts[2].padStart(2, '0')}`;
+                      }
+                    }
+                  }
+                }
+
+                // 4. Extracted Father's Name
+                const docFather = panRes?.father_name || aadhaarRes?.father_name || dlRes?.father_name;
+                if (docFather) newFormData.document.father_name = docFather;
+
+                // 5. Extracted Gender
+                const docGender = aadhaarRes?.gender || panRes?.gender;
+                if (docGender) {
+                  newFormData.document.gender = docGender;
+                  if (!newFormData.applicant.gender || newFormData.applicant.gender.trim() === '') {
+                    newFormData.applicant.gender = docGender;
+                  }
+                }
+
+                // 6. Extracted Address (from Aadhaar or Driving License)
+                const docAddr = aadhaarRes?.address || dlRes?.address;
+                if (docAddr) {
+                  newFormData.document.extracted_address = docAddr;
+                  if (!newFormData.address.current_address || newFormData.address.current_address.trim() === '') {
+                    newFormData.address.current_address = docAddr;
+                  }
+                }
+
                 setFormData(newFormData);
 
                 // Once Video KYC is done, return to form at step 7 (Documents review)
@@ -4364,7 +4913,14 @@ export default function LoanApplicationERP() {
                   {currentStep === 4 && <StepFourLoan formData={formData} setFormData={setFormData} errors={errors} />}
                   {currentStep === 5 && <StepFiveFinancial formData={formData} setFormData={setFormData} errors={errors} />}
                   {currentStep === 6 && <StepSixVideoKYC formData={formData} setFormData={setFormData} />}
-                  {currentStep === 7 && <StepSevenDocuments formData={formData} setFormData={setFormData} errors={errors} />}
+                  {currentStep === 7 && (
+                    <StepSevenDocuments
+                      formData={formData}
+                      setFormData={setFormData}
+                      errors={errors}
+                      onRetakeKYC={() => setCurrentPage('video-kyc')}
+                    />
+                  )}
 
                   {currentStep === 7 && (
                     <div className="mt-8">

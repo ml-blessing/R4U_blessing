@@ -14,6 +14,11 @@ Address,city,City,Pune,Applicant resides in city Pune.
 Address,state,State,Maharashtra,Applicant resides in state Maharashtra.
 Address,pincode,Pincode,411045,Applicant residence postal pincode is 411045.
 Address,residence_type,Residence Type,Rented,Applicant home ownership/residence type is Rented.
+Address,sameAsPermanent,Same as Permanent,True,Temporary address is same as permanent: True.
+Address,permanent_address,Permanent Address,,Applicant permanent address: None.
+Address,permanent_city,Permanent City,,Applicant permanent city None.
+Address,permanent_state,Permanent State,,Applicant permanent state None.
+Address,permanent_pincode,Permanent Pincode,,Applicant permanent pincode is None.
 Employment,employment_type,Employment Type,Salaried,Applicant employment classification is Salaried.
 Employment,employer_name,Employer or Business Name,Infosys Technologies,Applicant employer or organization is Infosys Technologies.
 Employment,designation,Designation,Senior Software Engineer,Applicant job title/position is Senior Software Engineer.
@@ -27,4 +32,14 @@ Financial,existing_loans,Has Existing Loans,No,Applicant declares existing loan 
 Financial,number_of_loans,Active Loans Count,0,Number of existing loans running is 0.
 Financial,existing_emi,Total Existing Monthly EMI (INR),0,Current monthly EMI commitment is INR 0.
 Financial,monthly_expenses,Estimated Monthly Expenses (INR),30000,Estimated monthly living expenses are INR 30000.
-Summary_Profile,summary_profile,Complete Profile,"Loan Application APP-2026-000008: Applicant Pooja Sharma (DOB: 1993-08-14, Gender: Female, Mobile: 9876543299, Email: pooja.sharma@example.com, Marital: Married) applied for a Home Loan of INR 4,500,000.00 with a 20 Years tenure. Loan purpose is 'Apartment Purchase'. Employment: Salaried at Infosys Technologies as Senior Software Engineer with 6 experience and monthly income of INR 110,000.00. Residential Address: Flat 402, Lotus Tower, Baner, Pune, Maharashtra - 411045 (Rented). Financial liabilities: Existing loans: No, number of loans: 0, current monthly EMI: INR 0.00, monthly expenses: INR 30,000.00. Current status is 'Submitted' recorded on 2026-09-04 by user 'customer_pooja.","Loan Application APP-2026-000008: Applicant Pooja Sharma (DOB: 1993-08-14, Gender: Female, Mobile: 9876543299, Email: pooja.sharma@example.com, Marital: Married) applied for a Home Loan of INR 4,500,000.00 with a 20 Years tenure. Loan purpose is 'Apartment Purchase'. Employment: Salaried at Infosys Technologies as Senior Software Engineer with 6 experience and monthly income of INR 110,000.00. Residential Address: Flat 402, Lotus Tower, Baner, Pune, Maharashtra - 411045 (Rented). Financial liabilities: Existing loans: No, number of loans: 0, current monthly EMI: INR 0.00, monthly expenses: INR 30,000.00. Current status is 'Submitted' recorded on 2026-09-04 by user 'customer_pooja."
+Document,pan_number,PAN Number,ABCP9876Q,Applicant PAN number is ABCP9876Q.
+Document,aadhaar_number,Aadhaar ID,987654321098,Applicant Aadhaar number is 987654321098.
+Document,extracted_name,KYC Extracted Name,,Extracted name from KYC document is None.
+Document,extracted_dob,KYC Extracted DOB,,Extracted DOB from KYC document is None.
+Document,father_name,Father's Name,,Father's name: None.
+Document,id_proof_type,Primary ID Proof,PAN Card,Primary ID proof document: PAN Card.
+Document,address_proof_type,Address Proof,Aadhaar Card,Address proof document: Aadhaar Card.
+Document,income_proof_type,Income Proof Category,Form 16 + 3 Months Salary Slips,Income proof type: Form 16 + 3 Months Salary Slips.
+Document,bank_statement_type,Bank Statement Category,6 Months HDFC Bank Statement,Bank statement category: 6 Months HDFC Bank Statement.
+Document,kyc_verified,Video KYC Verified,False,Video KYC verified: False.
+Summary_Profile,summary_profile,Complete Profile,"Loan Application APP-2026-000008: Applicant Pooja Sharma (DOB: 1993-08-14, Gender: Female, Mobile: 9876543299, Email: pooja.sharma@example.com, Marital: Married) applied for a Home Loan of INR 4,500,000.00 with a 20 Years tenure. Loan purpose is 'Apartment Purchase'. Employment: Salaried at Infosys Technologies as Senior Software Engineer with 6 experience and monthly income of INR 110,000.00. Residential Temporary Address: Flat 402, Lotus Tower, Baner, Pune, Maharashtra - 411045 (Rented). Residential Permanent Address: Same as Temporary, ,  - . Financial liabilities: Existing loans: No, number of loans: 0, current monthly EMI: INR 0.00, monthly expenses: INR 30,000.00. Current status is 'Submitted' recorded on 2026-09-04 by user 'customer_pooja.","Loan Application APP-2026-000008: Applicant Pooja Sharma (DOB: 1993-08-14, Gender: Female, Mobile: 9876543299, Email: pooja.sharma@example.com, Marital: Married) applied for a Home Loan of INR 4,500,000.00 with a 20 Years tenure. Loan purpose is 'Apartment Purchase'. Employment: Salaried at Infosys Technologies as Senior Software Engineer with 6 experience and monthly income of INR 110,000.00. Residential Temporary Address: Flat 402, Lotus Tower, Baner, Pune, Maharashtra - 411045 (Rented). Residential Permanent Address: Same as Temporary, ,  - . Financial liabilities: Existing loans: No, number of loans: 0, current monthly EMI: INR 0.00, monthly expenses: INR 30,000.00. Current status is 'Submitted' recorded on 2026-09-04 by user 'customer_pooja."

@@ -14,6 +14,11 @@ Address,city,City,Bengaluru,Applicant resides in city Bengaluru.
 Address,state,State,Karnataka,Applicant resides in state Karnataka.
 Address,pincode,Pincode,560038,Applicant residence postal pincode is 560038.
 Address,residence_type,Residence Type,Owned,Applicant home ownership/residence type is Owned.
+Address,sameAsPermanent,Same as Permanent,True,Temporary address is same as permanent: True.
+Address,permanent_address,Permanent Address,,Applicant permanent address: None.
+Address,permanent_city,Permanent City,,Applicant permanent city None.
+Address,permanent_state,Permanent State,,Applicant permanent state None.
+Address,permanent_pincode,Permanent Pincode,,Applicant permanent pincode is None.
 Employment,employment_type,Employment Type,Salaried,Applicant employment classification is Salaried.
 Employment,employer_name,Employer or Business Name,Infosys Ltd,Applicant employer or organization is Infosys Ltd.
 Employment,designation,Designation,Senior Consultant,Applicant job title/position is Senior Consultant.
@@ -27,4 +32,14 @@ Financial,existing_loans,Has Existing Loans,No,Applicant declares existing loan 
 Financial,number_of_loans,Active Loans Count,0,Number of existing loans running is 0.
 Financial,existing_emi,Total Existing Monthly EMI (INR),0,Current monthly EMI commitment is INR 0.
 Financial,monthly_expenses,Estimated Monthly Expenses (INR),35000,Estimated monthly living expenses are INR 35000.
-Summary_Profile,summary_profile,Complete Profile,"Loan Application APP-2026-000001: Applicant Rajesh Kumar (DOB: 1988-04-12, Gender: Male, Mobile: 9876543210, Email: rajesh.kumar@example.com, Marital: Married) applied for a Personal Loan of INR 500,000.00 with a 24 Months tenure. Loan purpose is 'Home Improvement'. Employment: Salaried at Infosys Ltd as Senior Consultant with 5–10 years experience and monthly income of INR 120,000.00. Residential Address: 42 MG Road, Indiranagar, Bengaluru, Karnataka - 560038 (Owned). Financial liabilities: Existing loans: No, number of loans: 0, current monthly EMI: INR 0.00, monthly expenses: INR 35,000.00. Current status is 'Submitted' recorded on 2026-09-01 by user 'customer_rajesh.","Loan Application APP-2026-000001: Applicant Rajesh Kumar (DOB: 1988-04-12, Gender: Male, Mobile: 9876543210, Email: rajesh.kumar@example.com, Marital: Married) applied for a Personal Loan of INR 500,000.00 with a 24 Months tenure. Loan purpose is 'Home Improvement'. Employment: Salaried at Infosys Ltd as Senior Consultant with 5–10 years experience and monthly income of INR 120,000.00. Residential Address: 42 MG Road, Indiranagar, Bengaluru, Karnataka - 560038 (Owned). Financial liabilities: Existing loans: No, number of loans: 0, current monthly EMI: INR 0.00, monthly expenses: INR 35,000.00. Current status is 'Submitted' recorded on 2026-09-01 by user 'customer_rajesh."
+Document,pan_number,PAN Number,,Applicant PAN number is None.
+Document,aadhaar_number,Aadhaar ID,,Applicant Aadhaar number is None.
+Document,extracted_name,KYC Extracted Name,,Extracted name from KYC document is None.
+Document,extracted_dob,KYC Extracted DOB,,Extracted DOB from KYC document is None.
+Document,father_name,Father's Name,,Father's name: None.
+Document,id_proof_type,Primary ID Proof,PAN Card,Primary ID proof document: PAN Card.
+Document,address_proof_type,Address Proof,Aadhaar Card,Address proof document: Aadhaar Card.
+Document,income_proof_type,Income Proof Category,,Income proof type: None.
+Document,bank_statement_type,Bank Statement Category,,Bank statement category: None.
+Document,kyc_verified,Video KYC Verified,False,Video KYC verified: False.
+Summary_Profile,summary_profile,Complete Profile,"Loan Application APP-2026-000001: Applicant Rajesh Kumar (DOB: 1988-04-12, Gender: Male, Mobile: 9876543210, Email: rajesh.kumar@example.com, Marital: Married) applied for a Personal Loan of INR 500,000.00 with a 24 Months tenure. Loan purpose is 'Home Improvement'. Employment: Salaried at Infosys Ltd as Senior Consultant with 5–10 years experience and monthly income of INR 120,000.00. Residential Temporary Address: 42 MG Road, Indiranagar, Bengaluru, Karnataka - 560038 (Owned). Residential Permanent Address: Same as Temporary, ,  - . Financial liabilities: Existing loans: No, number of loans: 0, current monthly EMI: INR 0.00, monthly expenses: INR 35,000.00. Current status is 'Submitted' recorded on 2026-09-01 by user 'customer_rajesh.","Loan Application APP-2026-000001: Applicant Rajesh Kumar (DOB: 1988-04-12, Gender: Male, Mobile: 9876543210, Email: rajesh.kumar@example.com, Marital: Married) applied for a Personal Loan of INR 500,000.00 with a 24 Months tenure. Loan purpose is 'Home Improvement'. Employment: Salaried at Infosys Ltd as Senior Consultant with 5–10 years experience and monthly income of INR 120,000.00. Residential Temporary Address: 42 MG Road, Indiranagar, Bengaluru, Karnataka - 560038 (Owned). Residential Permanent Address: Same as Temporary, ,  - . Financial liabilities: Existing loans: No, number of loans: 0, current monthly EMI: INR 0.00, monthly expenses: INR 35,000.00. Current status is 'Submitted' recorded on 2026-09-01 by user 'customer_rajesh."

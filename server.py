@@ -1,4 +1,6 @@
 import os
+from dotenv import load_dotenv
+load_dotenv()
 import io
 import cv2
 import csv
@@ -8,7 +10,7 @@ from datetime import datetime
 from typing import Optional, Dict, Any, List
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI, HTTPException, Query, Response, status
+from fastapi import FastAPI, HTTPException, Query, Response, status, Request, Form
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse, FileResponse, JSONResponse
 from fastapi import UploadFile, File
@@ -18,6 +20,8 @@ import easyocr
 import re
 from PIL import Image
 import numpy as np
+import base64
+import openai
 
 # Directory for storing KYC document images and CSV
 KYC_DOC_DIR = os.path.abspath("./data/kyc_documents")
@@ -115,12 +119,12 @@ def append_to_kyc_csv(row: dict):
     """Append a KYC extraction result row to kyc_extracted_data.csv."""
     fieldnames = [
         "timestamp", "application_id", "doc_type", "pan_number",
-        "aadhaar_number", "name", "dob", "dl_number",
-        "passport_number", "voter_id", "image_path", "raw_text"
+        "aadhaar_number", "name", "father_name", "dob", "gender", "address",
+        "dl_number", "passport_number", "voter_id", "image_path", "raw_text"
     ]
     file_exists = os.path.isfile(KYC_CSV_PATH)
     with open(KYC_CSV_PATH, mode="a", newline="", encoding="utf-8-sig") as f:
-        writer = csv.DictWriter(f, fieldnames=fieldnames)
+        writer = csv.DictWriter(f, fieldnames=fieldnames, extrasaction='ignore')
         if not file_exists:
             writer.writeheader()
         writer.writerow({k: row.get(k, "") for k in fieldnames})
@@ -189,18 +193,72 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+def verify_name_match_py(expected: str, extracted: str, father: str = "") -> bool:
+    """Deterministic, lenient Python verification for Indian identity documents."""
+    if not expected or expected.strip().lower() in ("", "unknown", "none", "temp_session", "n/a"):
+        return True
+    if not extracted or not extracted.strip():
+        return True  # Do not block if OCR was partial or unread
+
+    def clean_tokens(s):
+        s = s.lower()
+        s = re.sub(r'\b(mr|mrs|ms|shri|smt|dr|late|kumar|kumari)\b', '', s)
+        s = re.sub(r'[^a-z0-9\s]', ' ', s)
+        return [t for t in s.split() if len(t) > 1]
+
+    exp_tokens = clean_tokens(expected)
+    ext_tokens = clean_tokens(extracted)
+
+    if not exp_tokens or not ext_tokens:
+        return True
+
+    # 1. Any common token (e.g. first name or last name matches)
+    common = set(exp_tokens).intersection(set(ext_tokens))
+    if common:
+        return True
+
+    # 2. Token-level fuzzy similarity (handles minor OCR typos, e.g. Mohit vs Mohith or Dhumal vs Dhoomal)
+    from difflib import SequenceMatcher
+    for t1 in exp_tokens:
+        for t2 in ext_tokens:
+            if SequenceMatcher(None, t1, t2).ratio() >= 0.75:
+                return True
+
+    # 3. Substring matching of compacted strings
+    exp_compact = "".join(exp_tokens)
+    ext_compact = "".join(ext_tokens)
+    if (len(exp_compact) >= 4 and exp_compact in ext_compact) or (len(ext_compact) >= 4 and ext_compact in exp_compact):
+        return True
+
+    # 4. Check if extracted matches father_name mistakenly or shares family name
+    if father:
+        father_tokens = clean_tokens(father)
+        if set(exp_tokens).intersection(set(father_tokens)):
+            return True
+
+    return False
+
 @app.post("/api/ocr/extract")
 async def extract_ocr(
+    request: Request,
     file: UploadFile = File(...),
-    application_id: str = ""
+    application_id: Optional[str] = Query(None),
+    applicant_name: Optional[str] = Query(None)
 ):
     """OCR a document image, classify it, extract fields, save image + row to CSV."""
-    if reader is None:
-        return JSONResponse(status_code=500, content={"error": "OCR system not initialized"})
     try:
         contents = await file.read()
 
-        # Decode with OpenCV for preprocessing
+        # Check both query parameters and form body
+        try:
+            form_data = await request.form()
+        except Exception:
+            form_data = {}
+
+        app_id = (application_id or form_data.get("application_id") or "").strip()
+        app_name = (applicant_name or form_data.get("applicant_name") or "").strip()
+
+        # Decode with OpenCV to save the image
         img_array = np.frombuffer(contents, np.uint8)
         img_cv = cv2.imdecode(img_array, cv2.IMREAD_COLOR)
         if img_cv is None:
@@ -209,42 +267,162 @@ async def extract_ocr(
         # Save original image
         ts = datetime.now().strftime("%Y%m%d_%H%M%S")
         uid = str(uuid.uuid4())[:8]
-        doc_id = f"{application_id or 'noapp'}_{ts}_{uid}"
+        doc_id = f"{app_id or 'noapp'}_{ts}_{uid}"
         img_filename = f"{doc_id}.jpg"
         img_path = os.path.join(KYC_DOC_DIR, img_filename)
         cv2.imwrite(img_path, img_cv)
 
-        # Preprocess for OCR
-        preprocessed = preprocess_image_for_ocr(img_cv)
+        # Get Applicant Name from DB if not provided directly
+        import database
+        if not app_name and app_id:
+            try:
+                app_record = database.query_db("SELECT applicant FROM applications WHERE id = $1", (app_id,), one=True)
+                if app_record and app_record["applicant"]:
+                    applicant_data = json.loads(app_record["applicant"]) if isinstance(app_record["applicant"], str) else app_record["applicant"]
+                    app_name = applicant_data.get('full_name', '').strip()
+            except Exception as e:
+                print(f"Error fetching application for name matching: {e}")
 
-        # Run EasyOCR on both original colour and preprocessed to maximise hits
-        result_raw   = reader.readtext(img_cv,        detail=0, paragraph=True)
-        result_proc  = reader.readtext(preprocessed, detail=0, paragraph=True)
-        combined_text = " ".join(result_raw + result_proc)
+        has_expected_name = bool(app_name and app_name.lower() not in ("unknown", "none", "temp_session", "n/a", ""))
 
-        # Detect doc type and extract fields
-        info = detect_doc_type_and_fields(combined_text)
-        info["image_path"] = img_path
-        info["timestamp"]  = ts
-        info["application_id"] = application_id or ""
+        # Encode image as JPEG for OpenAI
+        success, encoded_image = cv2.imencode('.jpg', img_cv)
+        if not success:
+            return JSONResponse(status_code=500, content={"error": "Failed to encode image"})
+        
+        base64_image = base64.b64encode(encoded_image.tobytes()).decode('utf-8')
 
-        # Append to KYC CSV (Keep existing CSV functionality)
+        # Use OpenAI Vision
+        client = openai.OpenAI()
+        
+        system_prompt = f"""
+You are an expert KYC verification agent for an Indian banking institution.
+Your task is to analyze the provided identity document (PAN Card, Aadhaar Card, Driving License, Passport, Voter ID, or Income Proof) and extract all details accurately.
+
+Expected Applicant Name: "{app_name if has_expected_name else 'N/A (Not Provided)'}"
+
+CRITICAL INSTRUCTIONS FOR NAME EXTRACTION & MATCHING:
+1. PAN CARDS:
+   - PAN cards have "INCOME TAX DEPARTMENT" at the top.
+   - The first name below the header is the APPLICANT'S FULL NAME (e.g. "MOHIT DHUMAL").
+   - The second name below is the FATHER'S NAME (or Guardian's Name).
+   - You MUST extract the Applicant's Name into "name", and the Father's Name into "father_name".
+   - NEVER confuse Father's Name with the Applicant's Name!
+2. AADHAAR / DL / PASSPORT / VOTER ID:
+   - Extract the cardholder's name into "name".
+   - Extract any guardian/father/spouse name into "father_name" if present.
+3. NAME MATCHING LOGIC ("name_match"):
+   - If Expected Applicant Name is "N/A (Not Provided)" or empty, set "name_match": true.
+   - If Expected Applicant Name is provided:
+     * Compare the extracted cardholder "name" (NOT father_name!) against the expected name "{app_name}".
+     * Be LENIENT and case-insensitive.
+     * Allow for missing or added middle names, initials, or father's initial (e.g. "Mohit D. Dhumal" matches "Mohit Dhumal").
+     * Allow reversed name order (e.g. "Dhumal Mohit" matches "Mohit Dhumal").
+     * Allow minor spelling or phonetic variations.
+     * If the core identity matches, set "name_match": true.
+     * ONLY set "name_match": false if the document clearly belongs to an entirely different individual.
+4. EXTRACT ALL AVAILABLE FIELDS:
+   - Document numbers (pan_number, aadhaar_number, dl_number, passport_number, voter_id).
+   - Date of Birth (dob) in DD/MM/YYYY format if readable.
+   - Gender (gender) e.g. Male/Female if present.
+   - Address (address) if present on the document.
+
+Return ONLY a valid JSON object with the following schema:
+{{
+  "doc_type": "PAN Card" | "Aadhaar Card" | "Driving License" | "Passport" | "Voter ID" | "Income Proof" | "Unknown",
+  "pan_number": "extracted or empty string",
+  "aadhaar_number": "extracted or empty string",
+  "name": "extracted applicant name or empty string",
+  "father_name": "extracted father or guardian name or empty string",
+  "dob": "extracted DOB in DD/MM/YYYY or empty string",
+  "gender": "extracted gender or empty string",
+  "address": "extracted address or empty string",
+  "dl_number": "extracted or empty string",
+  "passport_number": "extracted or empty string",
+  "voter_id": "extracted or empty string",
+  "is_genuine": true or false,
+  "name_match": true or false,
+  "fraud_reason": "Provide reason ONLY if is_genuine is false or genuine name_match failure, else empty string",
+  "raw_text": "Extract all text found in the image for record keeping"
+}}
+"""
+        response = client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[
+                {"role": "system", "content": system_prompt},
+                {
+                    "role": "user",
+                    "content": [
+                        {"type": "text", "text": "Analyze this document image."},
+                        {
+                            "type": "image_url",
+                            "image_url": {
+                                "url": f"data:image/jpeg;base64,{base64_image}",
+                                "detail": "high"
+                            }
+                        }
+                    ]
+                }
+            ],
+            response_format={"type": "json_object"}
+        )
+
+        result_text = response.choices[0].message.content
+        result_json = json.loads(result_text)
+
+        # Merge with existing expected info struct
+        info = {
+            "doc_type": result_json.get("doc_type", "Unknown"),
+            "pan_number": result_json.get("pan_number", ""),
+            "aadhaar_number": result_json.get("aadhaar_number", ""),
+            "name": result_json.get("name", ""),
+            "father_name": result_json.get("father_name", ""),
+            "dob": result_json.get("dob", ""),
+            "gender": result_json.get("gender", ""),
+            "address": result_json.get("address", ""),
+            "dl_number": result_json.get("dl_number", ""),
+            "passport_number": result_json.get("passport_number", ""),
+            "voter_id": result_json.get("voter_id", ""),
+            "raw_text": result_json.get("raw_text", ""),
+            "is_genuine": result_json.get("is_genuine", True),
+            "name_match": result_json.get("name_match", True),
+            "fraud_reason": result_json.get("fraud_reason", ""),
+            "image_path": img_path,
+            "timestamp": ts,
+            "application_id": app_id or ""
+        }
+
+        # Apply Python name verification override
+        if has_expected_name:
+            py_match = verify_name_match_py(app_name, info["name"], info.get("father_name", ""))
+            if py_match:
+                info["name_match"] = True
+                if "name" in info["fraud_reason"].lower():
+                    info["fraud_reason"] = ""
+        else:
+            info["name_match"] = True
+            if "name" in info["fraud_reason"].lower():
+                info["fraud_reason"] = ""
+
+        # Append to CSVs
         append_to_kyc_csv(info)
         append_to_important_numbers_csv(info)
 
-        # Determine if document is unreadable/unclean
         has_any_number = any([
             info["pan_number"], info["aadhaar_number"], info["dl_number"], 
             info["passport_number"], info["voter_id"]
         ])
-        is_unclean = len(combined_text.strip()) < 5 or (info["doc_type"] == "Unknown" and not has_any_number)
+        is_unclean = len(info["raw_text"].strip()) < 5 or (info["doc_type"] == "Unknown" and not has_any_number)
 
-        # Encode image as JPEG to store as BLOB
-        success, encoded_image = cv2.imencode('.jpg', img_cv)
-        if success and not is_unclean:
+        if not is_unclean:
             image_blob = encoded_image.tobytes()
-            # Save to database
-            import database
+            # Save the extended verification JSON into raw_text field to avoid schema migrations
+            verification_payload = json.dumps({
+                "raw_text": info["raw_text"],
+                "is_genuine": info["is_genuine"],
+                "name_match": info["name_match"],
+                "fraud_reason": info["fraud_reason"]
+            })
             try:
                 database.query_db(
                     """INSERT INTO kyc_documents 
@@ -260,7 +438,7 @@ async def extract_ocr(
                         info["dl_number"],
                         info["passport_number"],
                         info["voter_id"],
-                        combined_text,
+                        verification_payload,
                         image_blob
                     ),
                     commit=True
@@ -275,12 +453,18 @@ async def extract_ocr(
             "pan_number":      info["pan_number"],
             "aadhaar_number":  info["aadhaar_number"],
             "name":            info["name"],
+            "father_name":     info["father_name"],
             "dob":             info["dob"],
+            "gender":          info["gender"],
+            "address":         info["address"],
             "dl_number":       info["dl_number"],
             "passport_number": info["passport_number"],
             "voter_id":        info["voter_id"],
             "image_saved":     img_path,
-            "raw_text":        combined_text[:500],  # trimmed for frontend
+            "raw_text":        info["raw_text"][:500],
+            "is_genuine":      info["is_genuine"],
+            "name_match":      info["name_match"],
+            "fraud_reason":    info["fraud_reason"]
         }
     except Exception as e:
         import traceback
@@ -385,8 +569,10 @@ def save_application_csv_to_data_folder(app: Dict[str, Any]) -> str:
         f"Employment: {employment.get('employment_type', 'N/A')} at {employment.get('employer_name', 'N/A')} "
         f"as {employment.get('designation', 'N/A')} with {employment.get('experience', 'N/A')} experience and "
         f"monthly income of INR {float(employment.get('monthly_income', 0) or 0):,.2f}. "
-        f"Residential Address: {address.get('current_address', 'N/A')}, {address.get('city', 'N/A')}, "
+        f"Residential Temporary Address: {address.get('current_address', 'N/A')}, {address.get('city', 'N/A')}, "
         f"{address.get('state', 'N/A')} - {address.get('pincode', 'N/A')} ({address.get('residence_type', 'N/A')}). "
+        f"Residential Permanent Address: {address.get('permanent_address', 'Same as Temporary')}, {address.get('permanent_city', '')}, "
+        f"{address.get('permanent_state', '')} - {address.get('permanent_pincode', '')}. "
         f"Financial liabilities: Existing loans: {financial.get('existing_loans', 'No')}, "
         f"number of loans: {financial.get('number_of_loans', 0)}, current monthly EMI: INR {float(financial.get('existing_emi', 0) or 0):,.2f}, "
         f"monthly expenses: INR {float(financial.get('monthly_expenses', 0) or 0):,.2f}. "
@@ -418,6 +604,11 @@ def save_application_csv_to_data_folder(app: Dict[str, Any]) -> str:
         writer.writerow(["Address", "state", "State", address.get("state", ""), f"Applicant resides in state {address.get('state')}."])
         writer.writerow(["Address", "pincode", "Pincode", address.get("pincode", ""), f"Applicant residence postal pincode is {address.get('pincode')}."])
         writer.writerow(["Address", "residence_type", "Residence Type", address.get("residence_type", ""), f"Applicant home ownership/residence type is {address.get('residence_type')}."])
+        writer.writerow(["Address", "sameAsPermanent", "Same as Permanent", address.get("sameAsPermanent", True), f"Temporary address is same as permanent: {address.get('sameAsPermanent', True)}."])
+        writer.writerow(["Address", "permanent_address", "Permanent Address", address.get("permanent_address", ""), f"Applicant permanent address: {address.get('permanent_address')}."])
+        writer.writerow(["Address", "permanent_city", "Permanent City", address.get("permanent_city", ""), f"Applicant permanent city {address.get('permanent_city')}."])
+        writer.writerow(["Address", "permanent_state", "Permanent State", address.get("permanent_state", ""), f"Applicant permanent state {address.get('permanent_state')}."])
+        writer.writerow(["Address", "permanent_pincode", "Permanent Pincode", address.get("permanent_pincode", ""), f"Applicant permanent pincode is {address.get('permanent_pincode')}."])
 
         # Employment & Income Details
         writer.writerow(["Employment", "employment_type", "Employment Type", employment.get("employment_type", ""), f"Applicant employment classification is {employment.get('employment_type')}."])
@@ -439,6 +630,19 @@ def save_application_csv_to_data_folder(app: Dict[str, Any]) -> str:
         writer.writerow(["Financial", "number_of_loans", "Active Loans Count", financial.get("number_of_loans", 0), f"Number of existing loans running is {financial.get('number_of_loans', 0)}."])
         writer.writerow(["Financial", "existing_emi", "Total Existing Monthly EMI (INR)", financial.get("existing_emi", 0), f"Current monthly EMI commitment is INR {financial.get('existing_emi', 0)}."])
         writer.writerow(["Financial", "monthly_expenses", "Estimated Monthly Expenses (INR)", financial.get("monthly_expenses", 0), f"Estimated monthly living expenses are INR {financial.get('monthly_expenses', 0)}."])
+
+        # Document & KYC Verification Details
+        document = app.get("document", {})
+        writer.writerow(["Document", "pan_number", "PAN Number", document.get("pan_number", ""), f"Applicant PAN number is {document.get('pan_number')}."])
+        writer.writerow(["Document", "aadhaar_number", "Aadhaar ID", document.get("aadhaar_number", ""), f"Applicant Aadhaar number is {document.get('aadhaar_number')}."])
+        writer.writerow(["Document", "extracted_name", "KYC Extracted Name", document.get("extracted_name", ""), f"Extracted name from KYC document is {document.get('extracted_name')}."])
+        writer.writerow(["Document", "extracted_dob", "KYC Extracted DOB", document.get("extracted_dob", ""), f"Extracted DOB from KYC document is {document.get('extracted_dob')}."])
+        writer.writerow(["Document", "father_name", "Father's Name", document.get("father_name", ""), f"Father's name: {document.get('father_name')}."])
+        writer.writerow(["Document", "id_proof_type", "Primary ID Proof", document.get("id_proof_type", "PAN Card"), f"Primary ID proof document: {document.get('id_proof_type', 'PAN Card')}."])
+        writer.writerow(["Document", "address_proof_type", "Address Proof", document.get("address_proof_type", "Aadhaar Card"), f"Address proof document: {document.get('address_proof_type', 'Aadhaar Card')}."])
+        writer.writerow(["Document", "income_proof_type", "Income Proof Category", document.get("income_proof_type", ""), f"Income proof type: {document.get('income_proof_type')}."])
+        writer.writerow(["Document", "bank_statement_type", "Bank Statement Category", document.get("bank_statement_type", ""), f"Bank statement category: {document.get('bank_statement_type')}."])
+        writer.writerow(["Document", "kyc_verified", "Video KYC Verified", document.get("kyc_verified", False), f"Video KYC verified: {document.get('kyc_verified', False)}."])
 
         # Full Summary Profile chunk
         writer.writerow(["Summary_Profile", "summary_profile", "Complete Profile", summary_text, summary_text])
@@ -463,6 +667,11 @@ def save_application_csv_to_data_folder(app: Dict[str, Any]) -> str:
         "state": address.get("state", ""),
         "pincode": address.get("pincode", ""),
         "residence_type": address.get("residence_type", ""),
+        "sameAsPermanent": address.get("sameAsPermanent", True),
+        "permanent_address": (address.get("permanent_address", "") or "").replace("\n", " "),
+        "permanent_city": address.get("permanent_city", ""),
+        "permanent_state": address.get("permanent_state", ""),
+        "permanent_pincode": address.get("permanent_pincode", ""),
         "employment_type": employment.get("employment_type", ""),
         "employer_name": employment.get("employer_name", ""),
         "designation": employment.get("designation", ""),
@@ -509,6 +718,7 @@ def sync_all_datasets_to_csv_data_folder():
         writer.writerow([
             "application_id", "applicant_name", "dob", "gender", "mobile", "email",
             "marital_status", "current_address", "city", "state", "pincode", "residence_type",
+            "sameAsPermanent", "permanent_address", "permanent_city", "permanent_state", "permanent_pincode",
             "employment_type", "employer_name", "designation", "experience", "monthly_income_inr",
             "loan_type", "requested_amount_inr", "tenure", "purpose",
             "existing_loans", "number_of_loans", "existing_emi_inr", "monthly_expenses_inr",
@@ -535,6 +745,11 @@ def sync_all_datasets_to_csv_data_folder():
                 address.get("state", ""),
                 address.get("pincode", ""),
                 address.get("residence_type", ""),
+                address.get("sameAsPermanent", True),
+                (address.get("permanent_address", "") or "").replace("\n", " "),
+                address.get("permanent_city", ""),
+                address.get("permanent_state", ""),
+                address.get("permanent_pincode", ""),
                 employment.get("employment_type", ""),
                 employment.get("employer_name", ""),
                 employment.get("designation", ""),
@@ -643,6 +858,7 @@ def sync_all_datasets_to_csv_data_folder():
             "application_id", "status", "created_date", "created_by",
             "applicant_name", "dob", "gender", "mobile", "email", "marital_status",
             "current_address", "city", "state", "pincode", "residence_type",
+            "sameAsPermanent", "permanent_address", "permanent_city", "permanent_state", "permanent_pincode",
             "employment_type", "employer_name", "designation", "experience", "monthly_income",
             "loan_type", "requested_amount", "tenure", "purpose",
             "existing_loans", "existing_emi", "monthly_expenses",
@@ -663,6 +879,7 @@ def sync_all_datasets_to_csv_data_folder():
                 applicant.get("full_name", ""), applicant.get("dob", ""), applicant.get("gender", ""),
                 applicant.get("mobile", ""), applicant.get("email", ""), applicant.get("marital_status", ""),
                 (address.get("current_address", "") or "").replace("\n", " "), address.get("city", ""), address.get("state", ""), address.get("pincode", ""), address.get("residence_type", ""),
+                address.get("sameAsPermanent", True), (address.get("permanent_address", "") or "").replace("\n", " "), address.get("permanent_city", ""), address.get("permanent_state", ""), address.get("permanent_pincode", ""),
                 employment.get("employment_type", ""), employment.get("employer_name", ""), employment.get("designation", ""), employment.get("experience", ""), employment.get("monthly_income", 0),
                 loan.get("loan_type", ""), loan.get("requested_amount", 0), loan.get("tenure", ""), loan.get("purpose", ""),
                 financial.get("existing_loans", ""), financial.get("existing_emi", 0), financial.get("monthly_expenses", 0),
@@ -922,6 +1139,18 @@ def create_application(data: ApplicationData):
         ),
         commit=True
     )
+
+    # Link any KYC documents scanned during the session to this newly created application id
+    kyc_session_id = (data.document or {}).get("kyc_session_id")
+    if kyc_session_id:
+        try:
+            database.query_db(
+                "UPDATE kyc_documents SET application_id = $1 WHERE application_id = $2",
+                (app_id, kyc_session_id),
+                commit=True
+            )
+        except Exception as kyc_link_err:
+            print(f"Failed to link kyc documents to application {app_id}: {kyc_link_err}")
 
     created = database.query_db("SELECT * FROM applications WHERE id = $1", (app_id,), one=True)
     parsed_app = parse_app_row(created)
