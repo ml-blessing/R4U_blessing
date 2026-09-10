@@ -162,6 +162,7 @@ def append_to_important_numbers_csv(row: dict):
 
 
 import database
+import m0_core
 from rag_banker.graph import run_rag_query
 from rag_customer import run_customer_rag
 from rag_banker.pdf_generator import generate_rag_report_pdf
@@ -1113,11 +1114,12 @@ def get_single_application(app_id: str):
 # 7. Applications: Create / Submit New Application AND Automatically Save CSVs
 @app.post("/api/applications", status_code=status.HTTP_201_CREATED)
 def create_application(data: ApplicationData):
-    count_row = database.query_db("SELECT COUNT(*) as count FROM applications", one=True)
-    count = (count_row["count"] if count_row else 0) + 1
-    app_id = f"APP-2026-{str(count).zfill(6)}"
+    app_id = database.get_next_case_id()
 
+    # The canonical starting state must be DRAFT
+    initial_status = m0_core.CanonicalState.DRAFT
     app_status = data.status or "Submitted"
+    
     created_date = datetime.utcnow().strftime("%Y-%m-%d")
     created_by = data.created_by or "customer"
 
@@ -1133,12 +1135,25 @@ def create_application(data: ApplicationData):
             json.dumps(data.financial),
             json.dumps(data.document or {}),
             json.dumps(data.digital or {}),
-            app_status,
+            initial_status,
             created_date,
             created_by
         ),
         commit=True
     )
+
+    # Initial DRAFT event
+    m0_core.TimelineService.add_event(app_id, "APP_CREATED", "Application Draft Created", created_by, "Initial draft created.", {})
+    
+    # Transition if intended to be submitted
+    if app_status == "Submitted" or app_status == m0_core.CanonicalState.LEAD_CREATED:
+        m0_core.StateTransitionService.transition(
+            case_id=app_id, 
+            new_state=m0_core.CanonicalState.LEAD_CREATED, 
+            actor=created_by, 
+            event_type="APP_SUBMISSION", 
+            reason="Application was submitted on creation."
+        )
 
     # Link any KYC documents scanned during the session to this newly created application id
     kyc_session_id = (data.document or {}).get("kyc_session_id")
@@ -1200,10 +1215,13 @@ def update_application(app_id: str, data: ApplicationData):
 # 9. Applications: Submit Draft AND Save CSV
 @app.post("/api/applications/{app_id}/submit")
 def submit_application(app_id: str):
-    database.query_db(
-        "UPDATE applications SET status = 'Submitted', updated_at = CURRENT_TIMESTAMP WHERE id = $1",
-        (app_id,),
-        commit=True
+    # Transition to LEAD_CREATED via M0 Rules Engine
+    m0_core.StateTransitionService.transition(
+        case_id=app_id,
+        new_state=m0_core.CanonicalState.LEAD_CREATED,
+        actor="system",
+        event_type="APP_SUBMISSION",
+        reason="Application draft submitted by user."
     )
     updated = database.query_db("SELECT * FROM applications WHERE id = $1", (app_id,), one=True)
     if not updated:
@@ -1504,6 +1522,72 @@ def api_customer_chat(req: CustomerChatRequest):
     except Exception as e:
         print(f"Customer Chat Error: {e}")
         return {"answer": "An error occurred while processing your request.", "intent": "ERROR"}
+
+# ==============================================================================
+# M0 ORCHESTRATOR API ENDPOINTS
+# ==============================================================================
+
+@app.get("/api/cases/{case_id}/state")
+def get_case_state(case_id: str):
+    app_record = database.query_db("SELECT status FROM applications WHERE id = $1", (case_id,), one=True)
+    if not app_record:
+        raise HTTPException(status_code=404, detail="Case not found")
+    canonical_state = m0_core.map_legacy_status(app_record["status"])
+    return {"case_id": case_id, "state": canonical_state}
+
+@app.get("/api/cases/{case_id}/timeline")
+def get_case_timeline(case_id: str):
+    events = database.query_db("SELECT * FROM m0_timeline_events WHERE case_id = $1 ORDER BY created_at ASC", (case_id,))
+    # Format output correctly
+    return {"case_id": case_id, "timeline": [dict(r) for r in events]}
+
+@app.get("/api/cases/{case_id}/audit")
+def get_case_audit(case_id: str):
+    events = database.query_db("SELECT * FROM m0_state_transitions WHERE case_id = $1 ORDER BY created_at ASC", (case_id,))
+    return {"case_id": case_id, "audit_trail": [dict(r) for r in events]}
+
+class TransitionRequest(BaseModel):
+    new_state: str
+    actor: str = "system"
+    event_type: str = "STATE_TRANSITION"
+    reason: str = ""
+    metadata: Dict[str, Any] = {}
+    idempotency_key: Optional[str] = None
+
+@app.post("/api/cases/{case_id}/transition")
+def transition_case_state(case_id: str, req: TransitionRequest):
+    try:
+        result = m0_core.StateTransitionService.transition(
+            case_id=case_id,
+            new_state=req.new_state,
+            actor=req.actor,
+            event_type=req.event_type,
+            reason=req.reason,
+            metadata=req.metadata,
+            idempotency_key=req.idempotency_key
+        )
+        return result
+    except ValueError as ve:
+        raise HTTPException(status_code=400, detail=str(ve))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/webhooks/{provider}")
+async def process_webhook(provider: str, request: Request):
+    try:
+        payload = await request.json()
+    except Exception:
+        payload = {}
+        
+    event_id = payload.get("event_id")
+    if not event_id:
+        raise HTTPException(status_code=400, detail="event_id missing from payload")
+        
+    try:
+        result = m0_core.WebhookFramework.process_webhook(provider, event_id, payload)
+        return result
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 if __name__ == "__main__":
     import uvicorn

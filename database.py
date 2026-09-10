@@ -171,6 +171,55 @@ def init_database():
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );
         """
+        create_m0_transitions = """
+        CREATE TABLE IF NOT EXISTS m0_state_transitions (
+            event_id INTEGER PRIMARY KEY AUTOINCREMENT,
+            case_id TEXT NOT NULL,
+            old_state TEXT NOT NULL,
+            new_state TEXT NOT NULL,
+            event_type TEXT NOT NULL,
+            actor TEXT NOT NULL,
+            reason TEXT,
+            metadata TEXT DEFAULT '{}',
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+        """
+        create_m0_timeline = """
+        CREATE TABLE IF NOT EXISTS m0_timeline_events (
+            timeline_event_id INTEGER PRIMARY KEY AUTOINCREMENT,
+            case_id TEXT NOT NULL,
+            event_type TEXT NOT NULL,
+            event_name TEXT NOT NULL,
+            actor TEXT NOT NULL,
+            description TEXT,
+            metadata TEXT DEFAULT '{}',
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+        """
+        create_m0_idempotency = """
+        CREATE TABLE IF NOT EXISTS m0_idempotency_keys (
+            idempotency_key TEXT PRIMARY KEY,
+            case_id TEXT,
+            event_type TEXT,
+            response_payload TEXT DEFAULT '{}',
+            status TEXT,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+        """
+        create_m0_webhooks = """
+        CREATE TABLE IF NOT EXISTS m0_webhook_events (
+            event_id TEXT PRIMARY KEY,
+            provider TEXT NOT NULL,
+            payload TEXT DEFAULT '{}',
+            processed INTEGER DEFAULT 0,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+        """
+        create_m0_case_sequence = """
+        CREATE TABLE IF NOT EXISTS m0_case_sequence (
+            id INTEGER PRIMARY KEY AUTOINCREMENT
+        );
+        """
     else:
         create_users = """
         CREATE TABLE IF NOT EXISTS users (
@@ -218,11 +267,65 @@ def init_database():
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );
         """
+        create_m0_transitions = """
+        CREATE TABLE IF NOT EXISTS m0_state_transitions (
+            event_id SERIAL PRIMARY KEY,
+            case_id VARCHAR(50) NOT NULL,
+            old_state VARCHAR(50) NOT NULL,
+            new_state VARCHAR(50) NOT NULL,
+            event_type VARCHAR(100) NOT NULL,
+            actor VARCHAR(100) NOT NULL,
+            reason TEXT,
+            metadata JSONB DEFAULT '{}',
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+        """
+        create_m0_timeline = """
+        CREATE TABLE IF NOT EXISTS m0_timeline_events (
+            timeline_event_id SERIAL PRIMARY KEY,
+            case_id VARCHAR(50) NOT NULL,
+            event_type VARCHAR(100) NOT NULL,
+            event_name VARCHAR(100) NOT NULL,
+            actor VARCHAR(100) NOT NULL,
+            description TEXT,
+            metadata JSONB DEFAULT '{}',
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+        """
+        create_m0_idempotency = """
+        CREATE TABLE IF NOT EXISTS m0_idempotency_keys (
+            idempotency_key VARCHAR(100) PRIMARY KEY,
+            case_id VARCHAR(50),
+            event_type VARCHAR(100),
+            response_payload JSONB DEFAULT '{}',
+            status VARCHAR(50),
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+        """
+        create_m0_webhooks = """
+        CREATE TABLE IF NOT EXISTS m0_webhook_events (
+            event_id VARCHAR(100) PRIMARY KEY,
+            provider VARCHAR(100) NOT NULL,
+            payload JSONB DEFAULT '{}',
+            processed BOOLEAN DEFAULT FALSE,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+        """
+        create_m0_case_sequence = """
+        CREATE TABLE IF NOT EXISTS m0_case_sequence (
+            id SERIAL PRIMARY KEY
+        );
+        """
 
     cursor = conn.cursor()
     cursor.execute(create_users)
     cursor.execute(create_apps)
     cursor.execute(create_kyc)
+    cursor.execute(create_m0_transitions)
+    cursor.execute(create_m0_timeline)
+    cursor.execute(create_m0_idempotency)
+    cursor.execute(create_m0_webhooks)
+    cursor.execute(create_m0_case_sequence)
     conn.commit()
 
     # Dynamic Column Migration for existing databases
@@ -249,9 +352,29 @@ def init_database():
             """)
             conn.commit()
     except Exception as e:
-        print(f"Migration notice: {e}")
+        print(f"Migration error: {e}")
 
-    # Seed Default Users for Bank, Customer, Developer logins
+    # Initialize sequence if table is empty, start from COUNT(*) + 1 to avoid conflicts
+    try:
+        cursor.execute("SELECT COUNT(*) as c FROM m0_case_sequence")
+        row = cursor.fetchone()
+        seq_count = row[0] if isinstance(row, (tuple, list)) else row['c']
+        
+        if seq_count == 0:
+            cursor.execute("SELECT COUNT(*) as c FROM applications")
+            row = cursor.fetchone()
+            app_count = row[0] if isinstance(row, (tuple, list)) else row['c']
+            if app_count > 0:
+                if engine == 'sqlite':
+                    # SQLite doesn't have a direct setval, so we insert a dummy and update it
+                    cursor.execute("INSERT INTO m0_case_sequence (id) VALUES (?)", (app_count,))
+                else:
+                    cursor.execute("SELECT setval('m0_case_sequence_id_seq', %s)", (app_count,))
+                conn.commit()
+    except Exception as e:
+        print(f"Error initializing case sequence: {e}")
+
+    # Seed Admin Users for Bank, Customer, Developer logins
     cursor.execute("SELECT COUNT(*) as count FROM users")
     row = cursor.fetchone()
     count = row[0] if isinstance(row, (tuple, list)) else row['count']
@@ -530,3 +653,26 @@ def get_db_info():
 # Alias for convenience
 init_db = init_database
 
+def get_next_case_id():
+    conn, engine = get_connection()
+    try:
+        if engine == 'sqlite':
+            cursor = conn.cursor()
+            cursor.execute("INSERT INTO m0_case_sequence DEFAULT VALUES")
+            conn.commit()
+            new_id = cursor.lastrowid
+            cursor.close()
+            return f"CASE-2026-{str(new_id).zfill(6)}"
+        else:
+            import psycopg2.extras
+            cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+            cursor.execute("INSERT INTO m0_case_sequence DEFAULT VALUES RETURNING id")
+            new_id = cursor.fetchone()['id']
+            conn.commit()
+            cursor.close()
+            return f"CASE-2026-{str(new_id).zfill(6)}"
+    except Exception as e:
+        conn.rollback()
+        raise e
+    finally:
+        conn.close()
